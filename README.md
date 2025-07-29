@@ -13,7 +13,7 @@ Revenue & Cost Calculation Web Application
 ```bash
 cd backend
 python -m venv venv
-source venv/bin/activate
+venv\Scripts\activate
 pip install -r requirements.txt
 # Update DB credentials in settings.py
 python manage.py migrate
