@@ -82,7 +82,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'shopmate',
         'USER': 'postgres',
-        'PASSWORD': 'asifDB01',
+        'PASSWORD': '*********', #provide password
         'HOST': 'localhost',
         'PORT': '5432',
     }
