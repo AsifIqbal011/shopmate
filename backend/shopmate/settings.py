@@ -52,6 +52,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+CORS_ALLOW_ALL_ORIGINS = True 
 
 ROOT_URLCONF = 'shopmate.urls'
 
@@ -75,7 +76,7 @@ WSGI_APPLICATION = 'shopmate.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
-CORS_ALLOW_ALL_ORIGINS = True  
+ 
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
