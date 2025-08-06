@@ -15,7 +15,7 @@ function ProductList() {
       <h2 className="text-xl font-bold">Products</h2>
       <ul>
         {products.map(p => (
-          <li key={p.id}>{p.name} — ৳{p.price}</li>
+          <li key={p.id}>{p.name} — ৳{p.selling_price}</li>
         ))}
       </ul>
     </div>
