@@ -23,6 +23,8 @@ class CustomerSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class ProductSerializer(serializers.ModelSerializer):
+    image = serializers.ImageField(required=False)
+    
     class Meta:
         model = Product
         fields = '__all__'

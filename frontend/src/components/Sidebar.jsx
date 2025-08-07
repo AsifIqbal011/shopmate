@@ -10,7 +10,7 @@ const Sidebar = () => {
           <span className="text-white">🛒 ShopMate</span>
         </h1>
          <nav className="flex flex-col gap-4 ">
-      <Link to="/" className="text-white"><NavItem icon={<FaTachometerAlt />} label="Dashboard" /></Link>
+      <Link to="/dashboard" className="text-white"><NavItem icon={<FaTachometerAlt />} label="Dashboard" /></Link>
       <Link to="/add-product" className="text-white"><NavItem icon={<FaPlus />} label="Add Product" /></Link>
       <Link to="/productlist" className="text-white"><NavItem icon={<FaList />} label="Product List" /></Link>
       <Link to="/create-sale" className="text-white"><NavItem icon={<MdOutlinePointOfSale />} label="Create Sales" /></Link>
@@ -20,7 +20,7 @@ const Sidebar = () => {
     </nav>
       </div>
       <div className="mt-4">
-        <NavItem icon={<FaSignOutAlt />} label="Logout" />
+        <Link to="/" className="text-white"> <NavItem icon={<FaSignOutAlt />} label="Logout" /></Link>
       </div>
     </div>
   );
