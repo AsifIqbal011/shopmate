@@ -4,6 +4,7 @@ import Home from "./pages/Home";
 import About from "./components/About";
 import Layout from "./components/Layout";
 import Login from './components/Login';
+import Signup from "./components/Signup";
 
 import Dashboard from "./pages/Dashboard";
 import ProductList from "./pages/ProductList";
@@ -20,6 +21,7 @@ function App() {
       <Routes>
         <Route index element={<Home />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
         <Route path="/" element={<Layout />}>
           <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/productlist" element={<ProductList />} />
@@ -29,7 +31,7 @@ function App() {
             <Route path="/reports" element={<Reports />} />
             <Route path="/employees" element={<Employees />} />
             <Route path="/settings" element={<Settings />} />
-             
+            
           </Route>
       </Routes>
     </>

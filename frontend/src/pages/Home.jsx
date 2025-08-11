@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from "react-router-dom";
 import { FaReceipt, FaChartLine } from 'react-icons/fa';
 import { MdAnalytics } from 'react-icons/md';
 
@@ -12,10 +13,11 @@ function Home() {
           <span>ShopMate</span>
         </div>
         <nav className="hidden sm:flex items-center gap-6 text-sm font-semibold">
-          <a href="#" className="hover:text-gray-300">Home</a>
-          <a href="#" className="hover:text-gray-300">Doc</a>
-          <a href="#" className="hover:text-gray-300">Contact</a>
-          <a href="/login" className="hover:text-gray-300">Signup/Login</a>
+          <Link href="#" className="hover:text-gray-300">Home</Link>
+          <Link href="#" className="hover:text-gray-300">Doc</Link>
+          <Link href="#" className="hover:text-gray-300">Contact</Link>
+          <a href="/signup" className="hover:text-gray-300">Signup</a><span>/</span>
+          <a href="/login" className="hover:text-gray-300">Login</a>
         </nav>
       </header>
 

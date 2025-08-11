@@ -1,4 +1,7 @@
+import React from 'react';
+
 const Dashboard = () => {
+  const user = JSON.parse(localStorage.getItem('user'));
   return (
     <div className="p-6">
       <header className="flex justify-between items-center mb-6">
@@ -6,8 +9,9 @@ const Dashboard = () => {
         <div className="flex items-center gap-4">
        
           <div className="text-right">
-            <p className="font-semibold">My Shop</p>
-            <p className="text-sm text-gray-500">asifiqbal@gmail.com</p>
+            <p className="font-semibold">Welcome, {user?.username || 'Guest'}!</p>
+            {user?.profile_pic && (<img src={`${user.profile_pic}`} alt="Profile" className="w-10 h-10 rounded-full mt-4"/>)}
+            <p className="text-sm text-gray-500">{user?.email}</p>
           </div>
         </div>
       </header>
