@@ -14,6 +14,7 @@ import CreateSale from "./pages/CreateSale";
 import Reports from "./pages/Reports";
 import Employees from "./pages/Employees";
 import Settings from "./pages/Settings";
+import Logout from "./components/Logout";
 
 function App() {
   return (
@@ -31,7 +32,7 @@ function App() {
             <Route path="/reports" element={<Reports />} />
             <Route path="/employees" element={<Employees />} />
             <Route path="/settings" element={<Settings />} />
-            
+            <Route path="/logout" element={<Logout />} />
           </Route>
       </Routes>
     </>

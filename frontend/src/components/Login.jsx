@@ -1,29 +1,40 @@
-import { useState } from 'react';
-import axios from 'axios';
+import { useState } from "react";
+import axios from "axios";
 
 const Login = () => {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
 
   const handleLogin = async (e) => {
     e.preventDefault();
 
     try {
-      const response = await axios.post('http://localhost:8000/auth/token/login/', {
-        username,
-        password
-      });
+      const response = await axios.post(
+        "http://localhost:8000/auth/token/login/",
+        {
+          username,
+          password,
+        }
+      );
 
       const token = response.data.auth_token;
-      localStorage.setItem('token', token); // ✅ store token
-      axios.defaults.headers.common['Authorization'] = `Token ${token}`; // ✅ set for all future requests
+      localStorage.setItem("token", token); // ✅ store token
+      axios.defaults.headers.common["Authorization"] = `Token ${token}`; // ✅ set for all future requests
 
+      const userResponse = await axios.get(
+        "http://localhost:8000/auth/users/me/",
+        {
+          headers: { Authorization: `Token ${token}` },
+        }
+      );
+
+      // Step 3: Save user data in localStorage
+      localStorage.setItem("user", JSON.stringify(userResponse.data));
       // Optional: redirect to dashboard or home
-      window.location.href = '/dashboard';
-
+      window.location.href = "/dashboard";
     } catch (err) {
-      setError('Invalid username or password');
+      setError("Invalid username or password");
     }
   };
 
@@ -46,7 +57,10 @@ const Login = () => {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
-        <button type="submit" className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600">
+        <button
+          type="submit"
+          className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600"
+        >
           Login
         </button>
       </form>

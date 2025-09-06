@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { FaTachometerAlt, FaPlus, FaList, FaChartBar, FaUser, FaCog, FaSignOutAlt, FaBell, FaBoxes } from 'react-icons/fa';
 import { MdOutlinePointOfSale } from 'react-icons/md';
+import Logout from "./Logout";
 
 const Sidebar = () => {
   return (
@@ -20,8 +21,15 @@ const Sidebar = () => {
     </nav>
       </div>
       <div className="mt-4">
-        <Link to="/" className="text-white"> <NavItem icon={<FaSignOutAlt />} label="Logout" /></Link>
+        <button 
+          onClick={Logout} 
+          className="w-full flex items-center bg-[#0f172a] gap-3 p-2 rounded text-white hover:bg-red-600 text-left"
+        >
+          <FaSignOutAlt />
+          <span>Logout</span>
+        </button>
       </div>
+    
     </div>
   );
 };

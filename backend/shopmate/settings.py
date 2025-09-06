@@ -84,6 +84,7 @@ REST_FRAMEWORK = {
 }
 
 DJOSER = {
+    "USER_CREATE_PASSWORD_RETYPE": False,
     'SERIALIZERS': {
         'user_create': 'core.serializers.CustomUserCreateSerializer',
         'user': 'core.serializers.CustomUserSerializer',
