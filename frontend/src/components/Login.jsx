@@ -1,6 +1,6 @@
 import { useState } from "react";
 import axios from "axios";
-
+import { Link } from "react-router-dom";
 const Login = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -64,6 +64,13 @@ const Login = () => {
           Login
         </button>
       </form>
+      <Link to='/'>
+      <button
+          className="w-full bg-red-500 text-white py-2 rounded hover:bg-blue-600"
+        >
+          Back
+        </button>
+        </Link>
     </div>
   );
 };
