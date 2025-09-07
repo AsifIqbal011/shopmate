@@ -1,10 +1,14 @@
 import { useState } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
+import { FaEye, FaEyeSlash, FaArrowLeft, FaShoppingCart } from "react-icons/fa";
+
+
 const Login = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -39,38 +43,109 @@ const Login = () => {
   };
 
   return (
-    <div className="p-4 max-w-sm mx-auto">
-      <h2 className="text-xl font-bold mb-4">Login</h2>
-      {error && <p className="text-red-600 mb-2">{error}</p>}
-      <form onSubmit={handleLogin} className="space-y-4">
-        <input
-          type="text"
-          placeholder="Username"
-          className="w-full p-2 border rounded"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          className="w-full p-2 border rounded"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-        <button
-          type="submit"
-          className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600"
+    <div className="relative">
+    <div className="fixed inset-0 min-h-screen min-w-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 to-green-50 overflow-hidden">
+      <div className="">
+        {/* Back Button */}
+        <Link
+          to="/"
+          className="mb-6 flex items-center text-gray-700 hover:text-gray-900"
         >
-          Login
-        </button>
-      </form>
-      <Link to='/'>
-      <button
-          className="w-full bg-red-500 text-white py-2 rounded hover:bg-blue-600"
-        >
-          Back
-        </button>
+          <FaArrowLeft className="h-4 w-4 mr-2" />
+          Back to Home
         </Link>
+
+        {/* Login Card */}
+        <div className="bg-white rounded-2xl shadow-lg p-6 border">
+          <div className="text-center mb-6">
+            <div className="w-10 h-10 bg-white rounded-full mx-auto flex items-center justify-center relative border">
+              <FaShoppingCart className="h-5 w-5 text-gray-900" />
+              <div className="absolute -bottom-1 -right-1 w-2 h-2 bg-orange-500 rounded-full"></div>
+            </div>
+            <h2 className="text-2xl font-bold mt-4">Welcome back</h2>
+            <p className="text-gray-500 mt-1">
+              Sign in to your ShopMate account
+            </p>
+          </div>
+
+          {error && <p className="text-red-600 mb-2 text-center">{error}</p>}
+
+          <form onSubmit={handleLogin} className="space-y-4 px-0">
+            {/* Username */}
+            <div>
+              <label
+                htmlFor="username"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Username
+              </label>
+              <input
+                type="text"
+                id="username"
+                placeholder="Enter your username"
+                className="mt-1 px-2 py-1 w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                required
+              />
+            </div>
+
+            {/* Password */}
+            <div>
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Password
+              </label>
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  id="password"
+                  placeholder="Enter your password"
+                  className="mt-1 px-2 py-1 w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 pr-10"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 px-3 py-1 mt-1 right-0 flex items-center text-gray-500"
+                >
+                  {showPassword ? <FaEyeSlash /> : <FaEye />}
+                </button>
+              </div>
+            </div>
+
+            {/* Submit */}
+            <button
+              type="submit"
+              className="w-full py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              Login
+            </button>
+          </form>
+
+          {/* Extra */}
+          <div className="mt-6 text-center">
+            <p className="text-sm text-gray-500">
+              Don’t have an account?{" "}
+              <Link to="/signup" className="text-blue-600 hover:underline">
+                Sign up
+              </Link>
+            </p>
+          </div>
+        </div>
+
+        {/* Trust text */}
+        <div className="mt-6 text-center">
+          <p className="text-xs text-gray-400">
+            Trusted by 10,000+ businesses worldwide
+          </p>
+        </div>
+      </div>
+    </div>
     </div>
   );
 };

@@ -1,16 +1,20 @@
 import { Link } from "react-router-dom";
-import { FaReceipt, FaChartLine } from "react-icons/fa";
+import { FaReceipt, FaChartLine,FaShoppingCart,FaArrowRight } from "react-icons/fa";
 import { MdAnalytics } from "react-icons/md";
+
 
 function Home() {
   return (
     <div className="flex flex-col min-h-screen">
       {/* Navbar */}
       <header className="fixed top-0 left-0 w-full bg-gray-900 text-white z-50 shadow">
-        <div className="max-w-7xl mx-auto flex justify-between items-center px-4 sm:px-6 lg:px-8 py-4">
+        <div className="max-w-7xl mx-auto flex justify-between items-center px-4 sm:px-4 lg:px-4 py-4">
           {/* Logo */}
           <div className="flex items-center gap-2 text-xl font-bold">
-            <span className="text-2xl text-orange-500">🛒</span>
+            <div className="w-10 h-10 bg-white rounded-full mx-auto flex items-center justify-center relative border">
+                          <FaShoppingCart className="h-5 w-5 text-gray-900" />
+                          <div className="absolute -bottom-1 -right-1 w-2 h-2 bg-orange-500 rounded-full"></div>
+                        </div>
             <span>ShopMate</span>
           </div>
 
@@ -41,7 +45,10 @@ function Home() {
           Welcome
         </h1>
         <p className="text-lg sm:text-xl text-gray-700 mb-10 max-w-xl">
-          Let’s simplify your sales, costs, and profit tracking
+          Let’s simplify your  
+           <span className="text-orange-600"> sales, </span>
+            <span className="text-blue-600">costs, </span>and
+            <span className="text-green-600"> profit </span> tracking
         </p>
 
         <div className="flex flex-col sm:flex-row gap-4 mb-16 w-full sm:w-auto">
@@ -123,7 +130,7 @@ function Home() {
           </p>
           <Link to="/signup">
             <button className="bg-white text-blue-600 font-semibold px-8 py-3 rounded-lg shadow hover:bg-gray-100 transition">
-              Start Free Trial
+              Start Now <FaArrowRight className="inline w-5 h-5 pb-1 text-blue-700" />  
             </button>
           </Link>
         </div>
