@@ -4,6 +4,7 @@ from .models import *
 admin.site.register([  Profile,
     Shop,
     Branch,
+    Category,
     Product,
     Customer,
     Sale,

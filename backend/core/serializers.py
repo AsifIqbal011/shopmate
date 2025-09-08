@@ -49,9 +49,20 @@ class ProfileSerializer(serializers.ModelSerializer):
 
 
 class ShopSerializer(serializers.ModelSerializer):
+    owner = serializers.ReadOnlyField(source='owner.id')  # read-only, automatically set
+
     class Meta:
         model = Shop
+        fields = ['id', 'name', 'address', 'phone', 'shop_logo', 'email', 'owner']
+        read_only_fields = ['id', 'owner']   
+
+class ShopMembershipSerializer(serializers.ModelSerializer):
+    shop = ShopSerializer(read_only=True)
+
+    class Meta:
+        model = ShopMembership
         fields = '__all__'
+        read_only_fields = ['user', 'shop']
 
 class BranchSerializer(serializers.ModelSerializer):
     class Meta:
@@ -63,12 +74,21 @@ class CustomerSerializer(serializers.ModelSerializer):
         model = Customer
         fields = '__all__'
 
+class CategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = '__all__'
+
 class ProductSerializer(serializers.ModelSerializer):
     image = serializers.ImageField(required=False)
-    
+    category = CategorySerializer(read_only=True)   # Show full category details
+    category_id = serializers.PrimaryKeyRelatedField(
+        queryset=Category.objects.all(), source="category", write_only=True
+    )
     class Meta:
         model = Product
         fields = '__all__'
+        read_only_fields = ['shop'] 
 
 class SaleItemSerializer(serializers.ModelSerializer):
     class Meta:

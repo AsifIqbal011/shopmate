@@ -1,23 +1,38 @@
-import React, { useState } from 'react';
-import axios from 'axios';
-import { FaUpload, FaBox } from "react-icons/fa";
+import React, { useState,useEffect } from "react";
+import { FaUpload, FaPlus, FaTimes } from "react-icons/fa";
+import axios from "axios";
 
 const AddProduct = () => {
   const [formData, setFormData] = useState({
-    name: '',
-    selling_price: '',
-    cost_price: '',
-    quantity: '',
-    shop: '',
+    name: "",
+    category: "",
+    cost_price: "",
+    selling_price: "",
+    quantity: "",
+    description: "",
     image: null,
   });
 
-  const handleChange = (e) => {
-    const { name, value, files } = e.target;
-    if (files && files.length > 0) {
-      setFormData((prev) => ({ ...prev, [name]: files[0] }));
-    } else {
-      setFormData((prev) => ({ ...prev, [name]: value }));
+  const [imagePreview, setImagePreview] = useState(null);
+  const [categories, setCategories] = useState([]);
+  
+  useEffect(() => {
+    axios
+      .get("http://localhost:8000/api/categories/")
+      .then((res) => setCategories(res.data))
+      .catch((err) => console.error("Error fetching categories:", err));
+  }, []);
+
+
+  const handleInputChange = (field, value) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleImageUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setFormData((prev) => ({ ...prev, image: file }));
+      setImagePreview(URL.createObjectURL(file));
     }
   };
 
@@ -33,6 +48,16 @@ const AddProduct = () => {
         headers: { "Content-Type": "multipart/form-data" },
       });
       alert("✅ Product added successfully!");
+      setFormData({
+        name: "",
+        category: "",
+        cost_price: "",
+        selling_price: "",
+        quantity: "",
+        description: "",
+        image: null,
+      });
+      setImagePreview(null);
     } catch (error) {
       if (error.response) {
         console.error("Backend error:", error.response.data);
@@ -43,135 +68,221 @@ const AddProduct = () => {
     }
   };
 
+  const calculateProfit = () => {
+    const cost = parseFloat(formData.cost_price) || 0;
+    const selling = parseFloat(formData.selling_price) || 0;
+    return selling - cost;
+  };
+
+  const calculateMargin = () => {
+    const profit = calculateProfit();
+    const selling = parseFloat(formData.selling_price) || 0;
+    return selling > 0 ? ((profit / selling) * 100).toFixed(1) : "0";
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-green-50 p-6">
-      <div className="bg-white shadow-lg rounded-2xl p-6 w-full max-w-lg">
-        <div className="text-center mb-6">
-          <div className="w-12 h-12 bg-white rounded-full mx-auto flex items-center justify-center border shadow-sm">
-            <FaBox className="h-6 w-6 text-gray-900" />
+    <div className="p-4 md:p-6 space-y-6">
+      {/* Page Header */}
+      <div>
+        <h1 className="text-2xl font-bold mb-2">Add Product</h1>
+        <p className="text-gray-500">
+          Add a new product to your inventory with pricing and details.
+        </p>
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-3 ">
+        {/* Main Form */}
+        <div className="lg:col-span-2 ">
+          <div className="bg-gray-50 shadow-md rounded-lg p-6">
+            <h2 className="text-lg font-semibold mb-4">Product Information</h2>
+            <form onSubmit={handleSubmit} className="space-y-4 ">
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium">
+                    Product Name *
+                  </label>
+                  <input
+                    type="text"
+                    className="w-full border rounded-lg p-2"
+                    placeholder="Enter product name"
+                    value={formData.name}
+                    onChange={(e) => handleInputChange("name", e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium">
+                    Category *
+                  </label>
+                  <select name="category_id" className="w-full border rounded-lg p-2">
+                    <option value="">Select a Category</option>
+                    {categories.map((cat) => (
+                      <option key={cat.id} value={cat.id}>
+                        {cat.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium">
+                    Cost Price *
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    className="w-full border rounded-lg p-2"
+                    placeholder="0.00"
+                    value={formData.cost_price}
+                    onChange={(e) =>
+                      handleInputChange("cost_price", e.target.value)
+                    }
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium">
+                    Selling Price *
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    className="w-full border rounded-lg p-2"
+                    placeholder="0.00"
+                    value={formData.selling_price}
+                    onChange={(e) =>
+                      handleInputChange("selling_price", e.target.value)
+                    }
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium">Stocks *</label>
+                  <input
+                    type="number"
+                    className="w-full border rounded-lg p-2"
+                    placeholder="0"
+                    value={formData.quantity}
+                    onChange={(e) =>
+                      handleInputChange("quantity", e.target.value)
+                    }
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium">Description</label>
+                <textarea
+                  className="w-full border rounded-lg p-2"
+                  rows={3}
+                  placeholder="Enter product description"
+                  value={formData.description}
+                  onChange={(e) =>
+                    handleInputChange("description", e.target.value)
+                  }
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="w-full bg-blue-600 text-white py-2 rounded-lg flex items-center justify-center gap-2 hover:bg-blue-700"
+              >
+                <FaPlus /> Add Product
+              </button>
+            </form>
           </div>
-          <h2 className="text-2xl font-bold mt-4">Add New Product</h2>
-          <p className="text-gray-500 mt-1">Fill in the product details</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Product Name */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Product Name
-            </label>
-            <input
-              name="name"
-              onChange={handleChange}
-              placeholder="Enter product name"
-              className="mt-1 block w-full rounded-lg border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              required
-            />
-          </div>
-
-          {/* Price Row */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Cost Price
-              </label>
-              <input
-                name="cost_price"
-                type="number"
-                onChange={handleChange}
-                placeholder="৳ Cost Price"
-                className="mt-1 block w-full rounded-lg border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Selling Price
-              </label>
-              <input
-                name="selling_price"
-                type="number"
-                onChange={handleChange}
-                placeholder="৳ Selling Price"
-                className="mt-1 block w-full rounded-lg border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                required
-              />
-            </div>
-          </div>
-
-          {/* Quantity & Shop Row */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Quantity
-              </label>
-              <input
-                name="quantity"
-                type="number"
-                onChange={handleChange}
-                placeholder="Stock quantity"
-                className="mt-1 block w-full rounded-lg border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Shop
-              </label>
-              <input
-                name="shop"
-                type="text"
-                onChange={handleChange}
-                placeholder="Shop name"
-                className="mt-1 block w-full rounded-lg border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                required
-              />
-            </div>
-          </div>
-
+        {/* Sidebar */}
+        <div className="space-y-6">
           {/* Image Upload */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Product Image
-            </label>
-            <div className="mt-1 flex items-center space-x-3">
-              <label
-                htmlFor="image"
-                className="flex items-center px-3 py-2 bg-blue-600 text-white rounded-lg cursor-pointer hover:bg-blue-700 transition"
-              >
-                <FaUpload className="mr-2" /> Upload
-              </label>
-              <input
-                type="file"
-                id="image"
-                name="image"
-                accept="image/*"
-                onChange={handleChange}
-                className="hidden"
-              />
-              {formData.image && (
+          <div className="bg-gray-50 shadow-md rounded-lg p-6">
+            <h2 className="text-lg font-semibold mb-4">Product Image</h2>
+            {imagePreview ? (
+              <div className="relative">
                 <img
-                  src={URL.createObjectURL(formData.image)}
-                  alt="Preview"
-                  className="h-12 w-12 rounded-md object-cover border"
+                  src={imagePreview}
+                  alt="Product preview"
+                  className="w-full h-48 object-cover rounded-lg"
                 />
-              )}
-            </div>
+                <button
+                  type="button"
+                  className="absolute top-2 right-2 bg-gray-800 text-white p-1 rounded-full"
+                  onClick={() => {
+                    setImagePreview(null);
+                    setFormData((prev) => ({ ...prev, image: null }));
+                  }}
+                >
+                  <FaTimes />
+                </button>
+              </div>
+            ) : (
+              <div className="border-2 border-dashed rounded-lg p-8 text-center">
+                <FaUpload className="text-gray-400 mx-auto mb-2 text-2xl" />
+                <p className="text-sm text-gray-500 mb-4">
+                  Click to upload product image
+                </p>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="hidden"
+                  id="image-upload"
+                />
+                <label
+                  htmlFor="image-upload"
+                  className="inline-block bg-gray-100 border px-4 py-2 rounded-lg cursor-pointer hover:bg-gray-200"
+                >
+                  Upload Image
+                </label>
+              </div>
+            )}
           </div>
 
-          {/* Submit */}
-          <button
-            type="submit"
-            className="w-full py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-          >
-            Add Product
-          </button>
-        </form>
+          {/* Price Summary */}
+          <div className="bg-gray-50 shadow-md rounded-lg p-6">
+            <h2 className="text-lg font-semibold mb-4">Price Summary</h2>
+            <div className="space-y-3">
+              <div className="flex justify-between">
+                <span className="text-sm text-gray-500">Selling Price:</span>
+                <span className="font-medium">
+                  ৳{formData.selling_price || "0.00"}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm text-gray-500">Cost Price:</span>
+                <span className="font-medium">
+                  ৳{formData.cost_price || "0.00"}
+                </span>
+              </div>
+              <div className="border-t pt-3">
+                <div className="flex justify-between">
+                  <span className="text-sm font-medium">Profit:</span>
+                  <span
+                    className={`font-medium ${
+                      calculateProfit() >= 0 ? "text-green-600" : "text-red-600"
+                    }`}
+                  >
+                    ৳{calculateProfit().toFixed(2)}
+                  </span>
+                </div>
+                <div className="flex justify-between mt-1">
+                  <span className="text-sm text-gray-500">Margin:</span>
+                  <span className="text-sm text-gray-500">
+                    {calculateMargin()}%
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
 };
-
 export default AddProduct;

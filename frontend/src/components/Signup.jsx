@@ -94,7 +94,7 @@ export default function Signup() {
             <div className="text-center mb-6">
               <div className="w-12 h-12 bg-white rounded-full mx-auto flex items-center justify-center relative border shadow-sm">
                 <FaShoppingCart className="h-5 w-5 text-gray-900" />
-                <div className="absolute -bottom-1 -right-1 w-2 h-2 bg-blue-600 rounded-full" />
+                <div className="absolute -bottom-1 -right-1 w-2 h-2 bg-orange-600 rounded-full" />
               </div>
               <h2 className="text-2xl font-bold mt-4">Create Account</h2>
               <p className="text-gray-500 mt-1">Sign up to get started</p>

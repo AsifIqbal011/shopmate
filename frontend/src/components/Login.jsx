@@ -103,18 +103,18 @@ const Login = () => {
                   type={showPassword ? "text" : "password"}
                   id="password"
                   placeholder="Enter your password"
-                  className="mt-1 px-2 py-1 w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 pr-10"
+                  className="mt-1 px-2 py-1 w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
                 />
-                <button
+                {/*<button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute inset-y-0 px-3 py-1 mt-1 right-0 flex items-center text-gray-500"
                 >
                   {showPassword ? <FaEyeSlash /> : <FaEye />}
-                </button>
+                </button> */}
               </div>
             </div>
 
