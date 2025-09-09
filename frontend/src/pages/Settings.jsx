@@ -45,25 +45,20 @@ const Settings = () => {
         const res = await axios.get(`${API_BASE}/shops/me/`, {
           headers: { Authorization: `Token ${token}` },
         });
-        setShopData(
-          res.data || {
+        setShopData(res.data);
+      } catch (err) {
+        if (err.response?.status === 404) {
+          setShopData({
             id: null,
             name: "",
             address: "",
             phone: "",
             email: "",
             shop_logo: null,
-          }
-        );
-      } catch (err) {
-        setShopData({
-          id: null,
-          name: "",
-          address: "",
-          phone: "",
-          email: "",
-          shop_logo: null,
-        });
+          });
+        } else {
+          console.error("Error fetching shop:", err);
+        }
       }
     };
     fetchShop();
@@ -99,31 +94,33 @@ const Settings = () => {
     }
   };
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  if (!shopData.name) {
-    alert("Shop name is required!");
-    return;
-  }
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!shopData.name) {
+      alert("Shop name is required!");
+      return;
+    }
 
-  const formData = new FormData();
-  Object.entries(shopData).forEach(([key, value]) => {
-    if (value) formData.append(key, value);
-  });
-
-  try {
-    const token = localStorage.getItem("token");
-    const res = await axios.post(`${API_BASE}/shops/`, formData, {
-      headers: { Authorization: `Token ${token}`, "Content-Type": "multipart/form-data" },
+    const formData = new FormData();
+    Object.entries(shopData).forEach(([key, value]) => {
+      if (value) formData.append(key, value);
     });
-    setShopData(res.data);
-    alert("Shop saved successfully!");
-  } catch (err) {
-    console.error("Shop save error:", err.response?.data || err);
-    alert("Failed to save shop");
-  }
-};
 
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.post(`${API_BASE}/shops/`, formData, {
+        headers: {
+          Authorization: `Token ${token}`,
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      setShopData(res.data);
+      alert("Shop saved successfully!");
+    } catch (err) {
+      console.error("Shop save error:", err.response?.data || err);
+      alert("Failed to save shop");
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -135,23 +132,37 @@ const handleSubmit = async (e) => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Business Info */}
-          <div className="bg-white shadow rounded-lg p-6">
-            <h2 className="font-semibold text-lg mb-4">Business Information</h2>
+          <div className="bg-white shadow-lg rounded-lg p-6">
+            <h2 className="font-semibold text-xl mb-6 border-b pb-2">
+              Business Information
+            </h2>
             {shopData.name ? (
-              <div className="space-y-2">
-                <p>
-                  <span className="font-medium">Name:</span> {shopData.name}
-                </p>
-                <p>
-                  <span className="font-medium">Email:</span> {shopData.email}
-                </p>
-                <p>
-                  <span className="font-medium">Phone:</span> {shopData.phone}
-                </p>
-                <p>
-                  <span className="font-medium">Address:</span>{" "}
-                  {shopData.address}
-                </p>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Left Column */}
+                <div className="space-y-3">
+                  <div className="flex justify-between border-b pb-1">
+                    <span className="font-medium text-gray-600">Name:</span>
+                    <span className="text-gray-800">{shopData.name}</span>
+                  </div>
+                  </div>
+                  <div className="space-y-3">
+                  <div className="flex justify-between border-b pb-1">
+                    <span className="font-medium text-gray-600">Email:</span>
+                    <span className="text-gray-800">{shopData.email}</span>
+                  </div>
+                  </div>
+                  <div className="space-y-3">
+                  <div className="flex justify-between border-b pb-1">
+                    <span className="font-medium text-gray-600">Phone:</span>
+                    <span className="text-gray-800">{shopData.phone}</span>
+                  </div>
+                  </div>
+                  <div className="space-y-3">
+                  <div className="flex justify-between border-b pb-1">
+                    <span className="font-medium text-gray-600">Address:</span>
+                    <span className="text-gray-800">{shopData.address}</span>
+                  </div>
+                </div>
               </div>
             ) : (
               <p className="text-gray-500">No shop created yet.</p>
@@ -159,55 +170,112 @@ const handleSubmit = async (e) => {
           </div>
 
           {/* Create Branch */}
-          <div className="bg-white shadow rounded-lg p-6">
-            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <FaPlus /> Create New Branch
-            </h3>
-            <form onSubmit={addBranch} className="space-y-4">
-              <input
-                type="text"
-                placeholder="Branch Name"
-                value={newBranch.name}
-                onChange={(e) =>
-                  setNewBranch({ ...newBranch, name: e.target.value })
-                }
-                className="w-full border p-2 rounded"
-              />
-              <input
-                type="text"
-                placeholder="Branch Address"
-                value={newBranch.address}
-                onChange={(e) =>
-                  setNewBranch({ ...newBranch, address: e.target.value })
-                }
-                className="w-full border p-2 rounded"
-              />
-              <input
-                type="text"
-                placeholder="Phone"
-                value={newBranch.phone}
-                onChange={(e) =>
-                  setNewBranch({ ...newBranch, phone: e.target.value })
-                }
-                className="w-full border p-2 rounded"
-              />
-              <input
-                type="text"
-                placeholder="Manager Name"
-                value={newBranch.manager}
-                onChange={(e) =>
-                  setNewBranch({ ...newBranch, manager: e.target.value })
-                }
-                className="w-full border p-2 rounded"
-              />
-              <button
-                type="submit"
-                className="w-full flex items-center justify-center gap-2 bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
-              >
-                <FaSave /> Create Branch
-              </button>
-            </form>
-          </div>
+          {shopData.owner ? (
+            <div className="bg-white shadow rounded-lg p-6">
+              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <FaPlus /> Create New Branch
+              </h3>
+              <form onSubmit={addBranch} className="space-y-4">
+                <input
+                  type="text"
+                  placeholder="Branch Name"
+                  value={newBranch.name}
+                  onChange={(e) =>
+                    setNewBranch({ ...newBranch, name: e.target.value })
+                  }
+                  className="w-full border p-2 rounded"
+                />
+                <input
+                  type="text"
+                  placeholder="Branch Address"
+                  value={newBranch.address}
+                  onChange={(e) =>
+                    setNewBranch({ ...newBranch, address: e.target.value })
+                  }
+                  className="w-full border p-2 rounded"
+                />
+                <input
+                  type="text"
+                  placeholder="Phone"
+                  value={newBranch.phone}
+                  onChange={(e) =>
+                    setNewBranch({ ...newBranch, phone: e.target.value })
+                  }
+                  className="w-full border p-2 rounded"
+                />
+                <input
+                  type="text"
+                  placeholder="Manager Name"
+                  value={newBranch.manager}
+                  onChange={(e) =>
+                    setNewBranch({ ...newBranch, manager: e.target.value })
+                  }
+                  className="w-full border p-2 rounded"
+                />
+                <button
+                  type="submit"
+                  className="w-full flex items-center justify-center gap-2 bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
+                >
+                  <FaSave /> Create Branch
+                </button>
+              </form>
+            </div>
+          ) : (
+            <div className="bg-white shadow rounded-lg p-6">
+              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <FaPlus /> Create New Shop
+              </h3>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <input
+                  type="text"
+                  name="name"
+                  placeholder="Shop Name"
+                  value={shopData?.name || ""}
+                  onChange={handleChange}
+                  className="w-full border p-2 rounded"
+                  required
+                />
+                <input
+                  type="text"
+                  name="address"
+                  placeholder="Address"
+                  value={shopData?.address || ""}
+                  onChange={handleChange}
+                  className="w-full border p-2 rounded"
+                />
+                <input
+                  type="text"
+                  name="phone"
+                  placeholder="Phone"
+                  value={shopData?.phone || ""}
+                  onChange={handleChange}
+                  className="w-full border p-2 rounded"
+                />
+                <input
+                  type="email"
+                  name="email"
+                  placeholder="Email"
+                  value={shopData?.email || ""}
+                  onChange={handleChange}
+                  className="w-full border p-2 rounded"
+                />
+                <input
+                  type="file"
+                  name="shop_logo"
+                  accept="image/*"
+                  onChange={handleChange}
+                  className="w-full"
+                />
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="bg-blue-800 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+                >
+                  {loading ? "Saving..." : "Save Shop"}
+                </button>
+              </form>
+            </div>
+          )}
 
           {/* Branch Management */}
           <div className="bg-white shadow rounded-lg p-6 md:col-span-2">
@@ -219,12 +287,11 @@ const handleSubmit = async (e) => {
                   <th className="text-left py-2">Manager</th>
                   <th className="text-left py-2">Phone</th>
                   <th className="text-left py-2">Status</th>
-                  <th className="text-left py-2">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {branches.map((branch) => (
-                  <tr key={branch.id} className="border-b">
+                  <tr key={branch.id} className="border-b text-start">
                     <td className="py-2">
                       <p className="font-medium">{branch.name}</p>
                       <p className="text-gray-500 text-xs">{branch.address}</p>
@@ -242,72 +309,10 @@ const handleSubmit = async (e) => {
                         {branch.status}
                       </span>
                     </td>
-                    <td>
-                      <button
-                        onClick={() => deleteBranch(branch.id)}
-                        className="text-red-600 hover:text-red-800 text-sm flex items-center gap-1"
-                      >
-                        <FaTrash /> Delete
-                      </button>
-                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
-          </div>
-
-          {/* Create / Update Shop */}
-          <div className="bg-white p-6 rounded-lg shadow border md:col-span-2">
-            <h2 className="font-semibold text-lg mb-4">Create / Update Shop</h2>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <input
-                type="text"
-                name="name"
-                placeholder="Shop Name"
-                value={shopData?.name || ""}
-                onChange={handleChange}
-                className="w-full border p-2 rounded"
-                required
-              />
-              <input
-                type="text"
-                name="address"
-                placeholder="Address"
-                value={shopData?.address || ""}
-                onChange={handleChange}
-                className="w-full border p-2 rounded"
-              />
-              <input
-                type="text"
-                name="phone"
-                placeholder="Phone"
-                value={shopData?.phone || ""}
-                onChange={handleChange}
-                className="w-full border p-2 rounded"
-              />
-              <input
-                type="email"
-                name="email"
-                placeholder="Email"
-                value={shopData?.email || ""}
-                onChange={handleChange}
-                className="w-full border p-2 rounded"
-              />
-              <input
-                type="file"
-                name="shop_logo"
-                accept="image/*"
-                onChange={handleChange}
-                className="w-full"
-              />
-              <button
-                type="submit"
-                disabled={loading}
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-              >
-                {loading ? "Saving..." : "Save Shop"}
-              </button>
-            </form>
           </div>
 
           {/* Delete Branch */}

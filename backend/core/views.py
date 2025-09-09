@@ -5,7 +5,7 @@ from django.http import HttpResponse
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from .utils import get_user_shop
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view,action
 
 
 def home(request):
@@ -24,36 +24,27 @@ class ProfileViewSet(viewsets.ModelViewSet):
     queryset = Profile.objects.all()
     serializer_class = ProfileSerializer
 
-class CreateShopView(generics.CreateAPIView):
-    serializer_class = ShopSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-    def perform_create(self, serializer):
-        shop = serializer.save(owner=self.request.user)
-        # create membership for this user
-        ShopMembership.objects.create(user=self.request.user, shop=shop, role='owner')
-
-# Get the shop for the logged-in user
-class MyShopView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
-
-    def get(self, request):
-        shop = Shop.objects.filter(owner=request.user).first()
-        if shop:
-            return Response(ShopSerializer(shop).data)
-        return Response(None)  # no shop found
-
-# Full Shop CRUD
 class ShopViewSet(viewsets.ModelViewSet):
-    queryset = Shop.objects.all()
     serializer_class = ShopSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
+        # Only show shops owned by the logged-in user
         return Shop.objects.filter(owner=self.request.user)
 
     def perform_create(self, serializer):
-        serializer.save(owner=self.request.user)
+        # Create shop and link it to the logged-in user
+        shop = serializer.save(owner=self.request.user)
+        # Create membership for this user automatically
+        ShopMembership.objects.create(user=self.request.user, shop=shop, role="owner")
+
+    @action(detail=False, methods=["get"])
+    def me(self, request):
+        """Custom route: GET /shops/me/ → returns the user's shop"""
+        shop = Shop.objects.filter(owner=request.user).first()
+        if shop:
+            return Response(ShopSerializer(shop).data, status=200)
+        return Response({"detail": "No shop found"}, status=404)
 
 class BranchViewSet(viewsets.ModelViewSet):
     queryset = Branch.objects.all()

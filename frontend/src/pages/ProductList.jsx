@@ -8,7 +8,12 @@ function ProductList() {
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
-    axios.get('http://localhost:8000/api/products/')
+    const token = localStorage.getItem("token"); // get token
+    axios.get('http://localhost:8000/api/products/', {
+        headers: {
+          Authorization: `Token ${token}`, // ✅ send token
+        },
+      })
       .then(response => {
         setProducts(response.data)
         setLoading(false)

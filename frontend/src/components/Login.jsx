@@ -25,6 +25,7 @@ const Login = () => {
       const token = response.data.auth_token;
       localStorage.setItem("token", token); // ✅ store token
       axios.defaults.headers.common["Authorization"] = `Token ${token}`; // ✅ set for all future requests
+      console.log(localStorage.getItem("token"));
 
       const userResponse = await axios.get(
         "http://localhost:8000/auth/users/me/",

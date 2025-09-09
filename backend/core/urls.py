@@ -16,5 +16,4 @@ router.register(r'invoices', InvoiceViewSet)
 urlpatterns = [
     path('', home), 
     path('', include(router.urls)),
-    path("shops/create/", CreateShopView.as_view(), name="create-shop"),
-    path('shops/me/', MyShopView.as_view(), name='my-shop'),]
+]

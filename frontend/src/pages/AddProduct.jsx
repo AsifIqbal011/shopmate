@@ -1,11 +1,11 @@
-import React, { useState,useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { FaUpload, FaPlus, FaTimes } from "react-icons/fa";
 import axios from "axios";
 
 const AddProduct = () => {
   const [formData, setFormData] = useState({
     name: "",
-    category: "",
+    category_id: "",
     cost_price: "",
     selling_price: "",
     quantity: "",
@@ -15,14 +15,19 @@ const AddProduct = () => {
 
   const [imagePreview, setImagePreview] = useState(null);
   const [categories, setCategories] = useState([]);
-  
+
+  // Fetch categories
   useEffect(() => {
+    const token = localStorage.getItem("token"); // get token
     axios
-      .get("http://localhost:8000/api/categories/")
+      .get("http://localhost:8000/api/categories/", {
+        headers: {
+          Authorization: `Token ${token}`, // ✅ send token
+        },
+      })
       .then((res) => setCategories(res.data))
       .catch((err) => console.error("Error fetching categories:", err));
   }, []);
-
 
   const handleInputChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -38,16 +43,34 @@ const AddProduct = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const token = localStorage.getItem("token");
+    if (!token) {
+      alert("You must be logged in to add a product.");
+      return;
+    }
+
     const data = new FormData();
     for (let key in formData) {
-      data.append(key, formData[key]);
+      if (formData[key] !== null && formData[key] !== "") {
+        data.append(key, formData[key]);
+      }
     }
 
     try {
-      await axios.post("http://localhost:8000/api/products/", data, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      const res = await axios.post(
+        "http://localhost:8000/api/products/",
+        data,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Token ${token}`, // ✅ Send token for authentication
+          },
+        }
+      );
+
       alert("✅ Product added successfully!");
+      // Reset form correctly
       setFormData({
         name: "",
         category: "",
@@ -82,7 +105,6 @@ const AddProduct = () => {
 
   return (
     <div className="p-4 md:p-6 space-y-6">
-      {/* Page Header */}
       <div>
         <h1 className="text-2xl font-bold mb-2">Add Product</h1>
         <p className="text-gray-500">
@@ -90,12 +112,12 @@ const AddProduct = () => {
         </p>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3 ">
+      <div className="grid gap-6 lg:grid-cols-3">
         {/* Main Form */}
-        <div className="lg:col-span-2 ">
+        <div className="lg:col-span-2">
           <div className="bg-gray-50 shadow-md rounded-lg p-6">
             <h2 className="text-lg font-semibold mb-4">Product Information</h2>
-            <form onSubmit={handleSubmit} className="space-y-4 ">
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium">
@@ -115,7 +137,14 @@ const AddProduct = () => {
                   <label className="block text-sm font-medium">
                     Category *
                   </label>
-                  <select name="category_id" className="w-full border rounded-lg p-2">
+                  <select
+                    value={formData.category_id}
+                    onChange={(e) =>
+                      handleInputChange("category_id", e.target.value)
+                    }
+                    className="w-full border rounded-lg p-2"
+                    required
+                  >
                     <option value="">Select a Category</option>
                     {categories.map((cat) => (
                       <option key={cat.id} value={cat.id}>
@@ -160,6 +189,7 @@ const AddProduct = () => {
                     required
                   />
                 </div>
+
                 <div>
                   <label className="block text-sm font-medium">Stocks *</label>
                   <input
@@ -285,4 +315,5 @@ const AddProduct = () => {
     </div>
   );
 };
+
 export default AddProduct;

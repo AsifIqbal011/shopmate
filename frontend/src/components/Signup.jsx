@@ -58,15 +58,28 @@ export default function Signup() {
       alert("Account created & logged in!");
       navigate("/dashboard");
     } catch (err) {
-      if (err.response) {
-        console.error("Signup error response:", err.response.data);
-        for (const [field, messages] of Object.entries(err.response.data)) {
-          alert(`${field}: ${messages.join(", ")}`);
-        }
-      } else {
-        console.error("Signup error:", err.message);
-      }
+  const data = err.response?.data;
+
+  let messages = [];
+
+  if (typeof data === "string") {
+    // If backend just sent a plain string
+    messages.push(data);
+  } else if (Array.isArray(data)) {
+    // If backend sent a list of errors
+    messages = data;
+  } else if (typeof data === "object" && data !== null) {
+    // If backend sent a dict of field errors
+    for (const key in data) {
+      messages.push(`${key}: ${data[key]}`);
     }
+  } else {
+    messages.push("Something went wrong. Please try again.");
+  }
+
+  alert(messages.join("\n"));
+}
+
   };
 
   return (
