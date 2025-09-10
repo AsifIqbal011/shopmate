@@ -44,7 +44,7 @@ const deleteProduct = async (id) => {
 
 
  return (
-    <div className="p-4">
+    <div className="bg-white p-4">
       <input
         type="text"
         placeholder="Search by product name..."

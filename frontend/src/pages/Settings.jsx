@@ -123,7 +123,7 @@ const Settings = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-white p-6">
       <div className="max-w-6xl mx-auto">
         <h2 className="text-2xl font-bold mb-2">Settings</h2>
         <p className="text-gray-600 mb-6">
@@ -137,7 +137,7 @@ const Settings = () => {
               Business Information
             </h2>
             {shopData.name ? (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 gap-6">
                 {/* Left Column */}
                 <div className="space-y-3">
                   <div className="flex justify-between border-b pb-1">

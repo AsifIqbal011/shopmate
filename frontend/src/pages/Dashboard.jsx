@@ -7,14 +7,6 @@ const Dashboard = () => {
     <div className="p-6">
       <header className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-semibold">Dashboard</h2>
-        <div className="flex items-center gap-4">
-       
-          <div className="text-right">
-            <p className="font-semibold">Welcome, {user?.full_name ||user?.username || 'Guest'}!</p>
-            {user?.profile_pic && (<img src={`${user.profile_pic}`} alt="Profile" className="w-10 h-10 rounded-full mt-4"/>)}
-            <p className="text-sm text-gray-500">{user?.email}</p>
-          </div>
-        </div>
       </header>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
