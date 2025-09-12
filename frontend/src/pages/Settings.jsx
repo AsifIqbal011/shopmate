@@ -8,8 +8,8 @@ const mockBranches = [
     name: "Main Store",
     address: "123 Main Street, City, State 12345",
     phone: "+1 (555) 123-4567",
-    manager: "John Smith",
-    status: "Active",
+    manager: "Anamina",
+    status: "No",
   },
 ];
 

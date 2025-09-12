@@ -3,7 +3,7 @@ import { FaBell, FaUser, FaBars } from "react-icons/fa";
 const TopBar = () => {
   const user = JSON.parse(localStorage.getItem("user"));
   return (
-    <header className=" bg-gray-50 border-b rounded-b-sm border-gray-200 p-4 md:px-6 py-3 md:py-3 sticky top-0 z-20 mt-0">
+    <header className="bg-gray-50 border-b rounded-b-sm border-gray-200 p-4 md:px-6 py-3 md:py-3 sticky top-0 z-20 mt-0">
       <div className="flex items-center justify-between">
         {/* Left section */}
         <div className="text-start max-[768px]:pl-10">
