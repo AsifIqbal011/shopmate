@@ -12,6 +12,7 @@ import AddProduct from "./pages/AddProduct";
 import EditProduct from "./pages/EditProduct";
 import CreateSale from "./pages/CreateSale";
 import Reports from "./pages/Reports";
+import CreateInvoice from "./pages/CreateInvoice";
 import Employees from "./pages/Employees";
 import Settings from "./pages/Settings";
 import Logout from "./components/Logout";
@@ -29,6 +30,7 @@ function App() {
             <Route path="/add-product" element={<AddProduct />} />
             <Route path="/edit-product/:id" element={<EditProduct />} />
             <Route path="/create-sale" element={<CreateSale />} />
+            <Route path="/create-invoice" element={<CreateInvoice />} />
             <Route path="/reports" element={<Reports />} />
             <Route path="/employees" element={<Employees />} />
             <Route path="/settings" element={<Settings />} />

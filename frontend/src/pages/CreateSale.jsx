@@ -130,8 +130,10 @@ const CreateSale = () => {
   // Main Create Sale View
   return (
     <div className="p-6 bg-white">
-      <h1 className="text-2xl font-bold mb-6">Create Sale</h1>
-
+      <h1 className="text-2xl font-bold mb-2">Create Sale</h1>
+<p className="text-gray-600 mb-2">
+              Genarate Invoices and make sales
+            </p>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Sales Form */}
         <div className="space-y-6">
