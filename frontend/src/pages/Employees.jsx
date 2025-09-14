@@ -207,7 +207,7 @@ export default function Employees() {
             <div className="flex gap-3 mt-3">
               <button
                 onClick={() => updateEmployee(e.id)}
-                className="flex-1 border px-2 py-1 rounded text-blue-600 transition-colors"
+                className="flex-1 border px-2 py-1 rounded text-blue-500 transition-colors"
               >
                 Update
               </button>
