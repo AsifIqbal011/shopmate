@@ -270,9 +270,9 @@ const CreateInvoice = () => {
           <div className="overflow-x-auto">
             <table className="w-full border">
               <thead>
-                <tr className="bg-gray-100">
+                <tr className="bg-green-700 text-white">
                   {columns.map((col) => (
-                    <th key={col.id} className="border px-3 py-2 text-left">
+                    <th key={col.id} className="border px-3 py-2 text-center text-xs">
                       {getColumnHeader(col)}
                       {col.isCustom && (
                         <button
@@ -285,8 +285,8 @@ const CreateInvoice = () => {
                     </th>
                   ))}
                   
-                  <th className="border px-3 py-2">Profit</th>
-                  <th className="border px-3 py-2">Delete</th>
+                  <th className="border px-3 py-2 text-xs">Profit</th>
+                  <th className="border px-3 py-2 text-xs">Delete</th>
                 
                 </tr>
               </thead>

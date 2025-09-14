@@ -61,17 +61,17 @@ const Reports = ({ isMobile, onPageChange }) => {
     <div className="flex gap-2 mb-6 flex-wrap">
       <Link
         onClick={() => onPageChange?.("pending-invoice")}
-        className="px-3 py-2 text-sm rounded-full bg-yellow-500 hover:bg-yellow-600 text-white flex items-center gap-1"
+        className="px-3 py-2 text-sm rounded-full bg-yellow-500 decoration-0 border hover:bg-gray-50 text-white flex items-center gap-1"
       >
         <FaFileInvoice /> Invoice Pending
       </Link>
       <Link
         onClick={() => onPageChange?.("create-invoice")}
-        className="px-3 py-2 text-sm rounded-full bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-1"
+        className="px-3 py-2 text-sm rounded-full bg-blue-600 border hover:bg-gray-50 text-white flex items-center gap-1"
       to="/create-invoice">
         <FaPlus /> Create Invoice
       </Link>
-      <Link className="px-3 py-2 text-sm rounded-full bg-purple-600 hover:bg-purple-700 text-white flex items-center gap-1" >
+      <Link className="px-3 py-2 text-sm rounded-full bg-purple-600 border hover:bg-gray-50 text-white flex items-center gap-1" >
         <FaFileAlt /> Statement
       </Link>
     
@@ -211,7 +211,7 @@ const Reports = ({ isMobile, onPageChange }) => {
               charts.
             </p>
           </div>
-          <div className="absolute right-0 top-0 flex flex-col items-end">
+          <div className=" lg:absolute right-0 top-0 flex flex-col items-end">
             <select
               value={selectedTimeframe}
               onChange={(e) => setSelectedTimeframe(e.target.value)}
