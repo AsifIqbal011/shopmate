@@ -27,6 +27,8 @@ function App() {
     <Routes>
       {/* Public routes */}
       <Route index element={<Home />} />
+      <Route path="docs" element={<Docs />} />
+      <Route path="contact" element={<Contact />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
 
@@ -43,8 +45,6 @@ function App() {
         <Route path="employees" element={<Employees />} />
         <Route path="settings" element={<Settings />} />
         <Route path="pending-invoices" element={<PendingInvoices />} />
-        <Route path="docs" element={<Docs />} />
-        <Route path="contact" element={<Contact />} />
         <Route path="logout" element={<Logout />} />
       </Route>
     </Routes>

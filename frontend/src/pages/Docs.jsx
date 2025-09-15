@@ -1,13 +1,17 @@
 import React from "react";
+import { NavBar } from "../components/NavBar";
+import { Footer } from "../components/Footer";
 import { CheckCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export default function Docs() {
   return (
-    <div className="max-w-4xl mx-auto p-8 space-y-10">
+    <div>
+    <div className="max-w-4xl mx-auto p-2 space-y-10 lg:w-257">
       {/* Header */}
-      <div className="text-center space-y-2">
-        <h1 className="text-3xl font-bold text-gray-800">📘 Documentation</h1>
+      <NavBar/>
+      <div className="text-center space-y-2 ">
+        <h1 className="text-3xl font-bold text-gray-800 mt-23 ">📘 Documentation</h1>
         <p className="text-gray-600">Everything you need to get started with ShopMate.</p>
       </div>
 
@@ -44,6 +48,9 @@ export default function Docs() {
           Go to Contact Page
         </Link>
       </section>
+      
     </div>
+    <Footer/>
+</div>
   );
 }

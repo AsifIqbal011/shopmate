@@ -1,43 +1,15 @@
 import { Link } from "react-router-dom";
 import { FaReceipt, FaChartLine,FaShoppingCart,FaArrowRight } from "react-icons/fa";
 import { MdAnalytics } from "react-icons/md";
+import { NavBar } from "../components/NavBar";
+import { Footer } from "../components/Footer";
 
 
 function Home() {
   return (
     <div className="flex flex-col min-h-screen">
       {/* Navbar */}
-      <header className="fixed top-0 left-0 w-full bg-gray-900 text-white z-50 shadow">
-        <div className="max-w-7xl mx-auto flex justify-between items-center px-4 sm:px-4 lg:px-4 py-4">
-          {/* Logo */}
-          <div className="flex items-center gap-2 text-xl font-bold">
-            <div className="w-10 h-10 bg-white rounded-full mx-auto flex items-center justify-center relative border">
-                          <FaShoppingCart className="h-5 w-5 text-gray-900" />
-                          <div className="absolute -bottom-1 -right-1 w-2 h-2 bg-orange-500 rounded-full"></div>
-                        </div>
-            <span>ShopMate</span>
-          </div>
-
-          {/* Navigation */}
-          <nav className="hidden sm:flex items-center gap-6 text-sm font-semibold">
-            <Link to="/" className="text-white hover:text-blue-400">
-              Home
-            </Link>
-            <Link to="/docs" className="text-white hover:text-blue-400">
-              Docs
-            </Link>
-            <Link to="/contact" className="text-white hover:text-blue-400">
-              Contact
-            </Link>
-            <Link to="/signup" className="text-white hover:text-blue-400">
-              Signup
-            </Link>
-            <Link to="/login" className="text-white hover:text-blue-400">
-              Login
-            </Link>
-          </nav>
-        </div>
-      </header>
+      <NavBar />
 
       {/* Hero Section */}
       <main className="flex-1 flex flex-col justify-center items-center text-center bg-white w-full  pt-28 px-4">
@@ -57,7 +29,7 @@ function Home() {
               Sign Up
             </button>
           </Link>
-          <Link to="/learn-more">
+          <Link to="/docs">
             <button className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded font-medium w-full sm:w-auto">
               Learn More
             </button>
@@ -137,11 +109,7 @@ function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="w-full bg-gray-900 text-white text-center py-4">
-        <p className="text-sm">
-          © {new Date().getFullYear()} ShopMate. All rights reserved.
-        </p>
-      </footer>
+      <Footer/>
     </div>
   );
 }

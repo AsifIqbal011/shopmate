@@ -1,7 +1,9 @@
 import React, { useState } from "react";
 import { Mail, Phone, MapPin } from "lucide-react";
+import { NavBar } from "../components/NavBar";
+import { Footer } from "../components/Footer";
 
-export default function Contact() {
+const Contact=()=> {
   const [formData, setFormData] = useState({ name: "", email: "", message: "" });
 
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -12,10 +14,11 @@ export default function Contact() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-8 space-y-10">
+    <div className="max-w-4xl mx-auto p-2 space-y-10 lg:w-257">
       {/* Header */}
+      <NavBar />
       <div className="text-center space-y-2">
-        <h1 className="text-3xl font-bold text-gray-800">📩 Contact Us</h1>
+        <h1 className="text-3xl font-bold text-gray-800 mt-23">📩 Contact Us</h1>
         <p className="text-gray-600">
           We'd love to hear from you! Fill out the form or use the info below.
         </p>
@@ -85,6 +88,8 @@ export default function Contact() {
           </button>
         </form>
       </div>
+      <Footer/>
     </div>
   );
 }
+export default Contact;
