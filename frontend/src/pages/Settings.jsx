@@ -1,6 +1,12 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { FaPlus, FaTrash, FaSave, FaExclamationTriangle, FaArchive } from "react-icons/fa";
+import {
+  FaPlus,
+  FaTrash,
+  FaSave,
+  FaExclamationTriangle,
+  FaArchive,
+} from "react-icons/fa";
 
 const mockBranches = [
   {
@@ -122,6 +128,47 @@ const Settings = () => {
     }
   };
 
+  //add category
+  const [newCategory, setNewCategory] = useState({
+    name: "",
+    description: "",
+  });
+
+  const handleCategoryChange = (e) => {
+    const { name, value } = e.target;
+    setNewCategory({ ...newCategory, [name]: value });
+  };
+
+  const handleCategorySubmit = async (e) => {
+    e.preventDefault();
+    if (!newCategory.name) {
+      alert("Category name is required!");
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.post(
+        `${API_BASE}/categories/`,
+        {
+          ...newCategory,
+          shop: shopData.id, // link category to current shop
+        },
+        {
+          headers: {
+            Authorization: `Token ${token}`,
+          },
+        }
+      );
+
+      alert("Category added successfully!");
+      setNewCategory({ name: "", description: "" }); // reset form
+    } catch (err) {
+      console.error("Category save error:", err.response?.data || err);
+      alert("Failed to add category");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-white p-6">
       <div className="max-w-6xl mx-auto">
@@ -144,20 +191,20 @@ const Settings = () => {
                     <span className="font-medium text-gray-600">Name:</span>
                     <span className="text-gray-800">{shopData.name}</span>
                   </div>
-                  </div>
-                  <div className="space-y-3">
+                </div>
+                <div className="space-y-3">
                   <div className="flex justify-between border-b pb-1">
                     <span className="font-medium text-gray-600">Email:</span>
                     <span className="text-gray-800">{shopData.email}</span>
                   </div>
-                  </div>
-                  <div className="space-y-3">
+                </div>
+                <div className="space-y-3">
                   <div className="flex justify-between border-b pb-1">
                     <span className="font-medium text-gray-600">Phone:</span>
                     <span className="text-gray-800">{shopData.phone}</span>
                   </div>
-                  </div>
-                  <div className="space-y-3">
+                </div>
+                <div className="space-y-3">
                   <div className="flex justify-between border-b pb-1">
                     <span className="font-medium text-gray-600">Address:</span>
                     <span className="text-gray-800">{shopData.address}</span>
@@ -220,7 +267,6 @@ const Settings = () => {
                 </button>
               </form>
             </div>
-            
           ) : (
             <div className="bg-white shadow rounded-lg p-6">
               <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
@@ -315,20 +361,26 @@ const Settings = () => {
               </tbody>
             </table>
           </div>
-{shopData.owner && (
+          {/*add category jsx */}
+          {shopData.owner && (
             <div className="bg-white shadow rounded-lg p-6">
               <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
                 <FaPlus /> Add New Category
               </h3>
-              <form className="space-y-4">
+              <form onSubmit={handleCategorySubmit} className="space-y-4">
                 <input
                   type="text"
+                  name="name"
                   placeholder="Category Name"
+                  value={newCategory.name}
+                  onChange={handleCategoryChange}
                   className="w-full border p-2 rounded"
                 />
-                <input
-                  type="textarea"
+                <textarea
+                  name="description"
                   placeholder="Description"
+                  value={newCategory.description}
+                  onChange={handleCategoryChange}
                   className="w-full border p-2 rounded"
                 />
                 <button
@@ -340,6 +392,7 @@ const Settings = () => {
               </form>
             </div>
           )}
+
           {/* Delete Branch */}
           <div className="bg-red-50 border border-red-200 shadow rounded-lg p-6 md:col-span-2">
             <h3 className="text-lg font-semibold mb-2 text-red-700 flex items-center gap-2">

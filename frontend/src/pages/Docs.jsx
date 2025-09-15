@@ -2,6 +2,7 @@ import React from "react";
 import { CheckCircle2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { NavBar } from "../components/NavBar";
+import { Footer } from "../components/Footer";
 
 export default function Docs() {
   return (
@@ -69,6 +70,7 @@ export default function Docs() {
           Contact Support
         </Link>
       </section>
+      <Footer />
     </div>
   );
 }

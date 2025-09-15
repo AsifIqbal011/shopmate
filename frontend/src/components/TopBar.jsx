@@ -33,10 +33,10 @@ const TopBar = () => {
               </div>
             )}
             {/* Notification */}
-            <button className="relative mt-4 p-2 rounded-full hover:bg-gray-100">
-              <FaBell className="text-gray-600 text-lg " />
+            <button className="relative p-2 rounded-full hover:bg-white">
+              <FaBell className="text-yellow-400 text-lg " />
               {/* Example of notification dot */}
-              <span className="absolute top-1 right-1 h-2 w-2 bg-red-500 rounded-full"></span>
+              <span className="absolute top-1 right-1 h-2 w-2 bg-orange-500 rounded-full"></span>
             </button>
           </div>
         </div>
