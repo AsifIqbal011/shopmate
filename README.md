@@ -18,3 +18,9 @@ pip install -r requirements.txt
 # Update DB credentials in settings.py
 python manage.py migrate
 python manage.py runserver
+```
+### Frontend (React)
+```bash
+cd frontend
+npm i
+npm run dev
