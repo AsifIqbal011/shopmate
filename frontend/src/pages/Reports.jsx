@@ -71,7 +71,8 @@ const Reports = ({ isMobile, onPageChange }) => {
       >
         <FaPlus /> Add Expenses
       </Link>
-      <Link className="px-3 py-2 text-sm rounded-full bg-purple-600 border hover:bg-gray-50 text-white flex items-center gap-1" >
+      <Link className="px-3 py-2 text-sm rounded-full bg-purple-600 border hover:bg-gray-50 text-white flex items-center gap-1"
+      to="/pending-invoices" >
         <FaFileAlt /> Statement
       </Link>
     
