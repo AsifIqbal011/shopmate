@@ -66,7 +66,7 @@ const ProductList = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white p-4 sm:p-6 w-full">
+    <div className="min-h-screen bg-white p-4 sm:p-6 lg:w-256">
       <div className="w-full h-full">
         {/* Header */}
         <h1 className="text-2xl font-bold mb-2">Product List</h1>

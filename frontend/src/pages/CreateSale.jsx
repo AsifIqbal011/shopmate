@@ -48,8 +48,11 @@ const CreateSale = () => {
   // Receipt View
   if (showReceipt) {
     return (
-      <div className="p-6">
-        <div className="max-w-md mx-auto bg-white shadow rounded-lg p-6">
+      <div className="p-6 lg:w-256">
+        <div
+          id="printRecipt"
+          className="max-w-md mx-auto bg-white shadow rounded-lg p-6"
+        >
           {/* Header */}
           <div className="text-center mb-6">
             {user?.profile_pic && (
@@ -83,7 +86,9 @@ const CreateSale = () => {
             {items.map((item) => (
               <div key={item.id} className="flex justify-between py-1 text-sm">
                 <div>
-                  <p className="text-start truncate max-w-[120px]" >{item.name}</p>
+                  <p className="text-start truncate max-w-[120px]">
+                    {item.name}
+                  </p>
                   <p className="text-start text-gray-500 text-xs">
                     {item.quantity} x ৳{item.price}
                   </p>
@@ -109,7 +114,7 @@ const CreateSale = () => {
             </div>
           </div>
         </div>
-        <div className="mt-6 flex gap-3">
+        <div className="mt-6 flex gap-3 w-sm m-auto">
           <button
             onClick={() => setShowReceipt(false)}
             className="w-1/2 py-2 border rounded-lg text-gray-700 bg-white border-black"
@@ -117,7 +122,26 @@ const CreateSale = () => {
             Back
           </button>
           <button
-            onClick={() => window.print()}
+            onClick={() => {
+              const receiptElement = document.querySelector("#printRecipt");
+              if (!receiptElement) return;
+
+              const printContents = receiptElement.innerHTML;
+              const originalContents = document.body.innerHTML;
+
+              // Replace with only receipt for printing
+              document.body.innerHTML = `<div style="display: flex; justify-content: center; margin-top: 20px;">
+                 <div style="max-width: 400px; width: 100%; padding: 16px; border: 1px solid #ddd; border-radius: 8px;">
+                  ${printContents}
+                 </div>
+                </div>`;
+
+              window.print();
+
+              // Restore page after printing
+              document.body.innerHTML = originalContents;
+              window.location.reload(); // reload React app
+            }}
             className="w-1/2 py-2 bg-orange-500 text-white rounded-lg flex items-center justify-center gap-2"
           >
             <FaPrint /> Print
@@ -131,9 +155,7 @@ const CreateSale = () => {
   return (
     <div className="p-6 bg-white">
       <h1 className="text-2xl font-bold mb-2">Create Sale</h1>
-<p className="text-gray-600 mb-2">
-              Genarate Invoices and make sales
-            </p>
+      <p className="text-gray-600 mb-2">Genarate Invoices and make sales</p>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Sales Form */}
         <div className="space-y-6">
@@ -261,7 +283,9 @@ const CreateSale = () => {
             {items.map((item) => (
               <div key={item.id} className="flex justify-between text-sm">
                 <div>
-                  <p className="text-start">{item.name || "Untitled Product"}</p>
+                  <p className="text-start">
+                    {item.name || "Untitled Product"}
+                  </p>
                   <p className="text-start text-gray-500">
                     {item.quantity} x ৳{item.price}
                   </p>

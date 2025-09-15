@@ -72,8 +72,8 @@ export default function Employees() {
   };
 
   return (
-    <div className="p-4 space-y-6">
-      {/* Header - Centered */}
+    <div className="p-4 space-y-6 lg:w-257">
+    
       <div className="flex flex-col items-center text-center mb-6 gap-3">
         <h1 className="text-3xl font-bold">Employees</h1>
         <p className="text-gray-500 max-w-xl">

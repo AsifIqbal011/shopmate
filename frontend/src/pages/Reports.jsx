@@ -62,14 +62,14 @@ const Reports = ({ isMobile, onPageChange }) => {
       <Link
         onClick={() => onPageChange?.("pending-invoice")}
         className="px-3 py-2 text-sm rounded-full bg-yellow-500 decoration-0 border hover:bg-gray-50 text-white flex items-center gap-1"
-      >
+      to="/create-invoice">
         <FaFileInvoice /> Invoice Pending
       </Link>
       <Link
         onClick={() => onPageChange?.("create-invoice")}
-        className="px-3 py-2 text-sm rounded-full bg-blue-600 border hover:bg-gray-50 text-white flex items-center gap-1"
-      to="/create-invoice">
-        <FaPlus /> Create Invoice
+        className="px-3 py-2 text-sm rounded-full bg-red-600 border hover:bg-gray-50 text-white flex items-center gap-1"
+      >
+        <FaPlus /> Add Expenses
       </Link>
       <Link className="px-3 py-2 text-sm rounded-full bg-purple-600 border hover:bg-gray-50 text-white flex items-center gap-1" >
         <FaFileAlt /> Statement
@@ -200,7 +200,7 @@ const Reports = ({ isMobile, onPageChange }) => {
   }
 
   return (
-    <div className="min-h-screen bg-white p-6">
+    <div className="min-h-screen bg-white p-6 lg:w-256">
       <div className=" relative mx-auto space-y-6">
         {/* Header */}
         <div className=" flex flex-col  justify-between  gap-4">

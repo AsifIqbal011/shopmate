@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { FaPlus, FaTrash, FaSave, FaExclamationTriangle } from "react-icons/fa";
+import { FaPlus, FaTrash, FaSave, FaExclamationTriangle, FaArchive } from "react-icons/fa";
 
 const mockBranches = [
   {
@@ -220,6 +220,7 @@ const Settings = () => {
                 </button>
               </form>
             </div>
+            
           ) : (
             <div className="bg-white shadow rounded-lg p-6">
               <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
@@ -278,7 +279,7 @@ const Settings = () => {
           )}
 
           {/* Branch Management */}
-          <div className="bg-white shadow rounded-lg p-6 md:col-span-2">
+          <div className="bg-white shadow rounded-lg p-6">
             <h3 className="text-lg font-semibold mb-4">Branch Management</h3>
             <table className="w-full text-sm border-collapse">
               <thead>
@@ -314,7 +315,31 @@ const Settings = () => {
               </tbody>
             </table>
           </div>
-
+{shopData.owner && (
+            <div className="bg-white shadow rounded-lg p-6">
+              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <FaPlus /> Add New Category
+              </h3>
+              <form className="space-y-4">
+                <input
+                  type="text"
+                  placeholder="Category Name"
+                  className="w-full border p-2 rounded"
+                />
+                <input
+                  type="textarea"
+                  placeholder="Description"
+                  className="w-full border p-2 rounded"
+                />
+                <button
+                  type="submit"
+                  className="w-full flex items-center justify-center gap-2 bg-green-600 text-white py-2 rounded hover:bg-green-700"
+                >
+                  <FaArchive /> Add
+                </button>
+              </form>
+            </div>
+          )}
           {/* Delete Branch */}
           <div className="bg-red-50 border border-red-200 shadow rounded-lg p-6 md:col-span-2">
             <h3 className="text-lg font-semibold mb-2 text-red-700 flex items-center gap-2">

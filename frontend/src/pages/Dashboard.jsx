@@ -1,5 +1,10 @@
 import React from "react";
 import {
+  FaArrowUp,
+  FaArrowDown,
+  FaCartPlus
+} from "react-icons/fa";
+import {
   BarChart,
   Bar,
   XAxis,
@@ -30,9 +35,12 @@ const salesData = [
   { day: "Sun", sales: 68 },
 ];
 
-export default function Dashboard({ isMobile }) {
+  const totalRevenue = revenueData.reduce((sum, d) => sum + d.revenue, 0);
+  const totalExpense = revenueData.reduce((sum, d) => sum + d.expense, 0);
+
+ const Dashboard=({ isMobile })=> {
   return (
-    <div className="p-4 md:p-6 space-y-6">
+    <div className="p-4 md:p-6 space-y-6 lg:w-256">
       {/* Header */}
       <header>
         <h1 className="text-2xl font-bold text-gray-900 mb-2">Dashboard</h1>
@@ -40,10 +48,45 @@ export default function Dashboard({ isMobile }) {
           Welcome back! Here's what's happening with your business today.
         </p>
       </header>
-
-      {/* Metric cards placeholder */}
-      {/* Add your own MetricCards component if needed */}
-
+       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* Revenue */}
+              <div className="bg-white shadow rounded-lg p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-500">Total Revenue</p>
+                    <p className="text-2xl font-bold">
+                      ৳{totalRevenue.toLocaleString()}
+                    </p>
+                  </div>
+                  <FaArrowUp className="h-8 w-8 text-green-500" />
+                </div>
+              </div>
+              {/* Expense */}
+              <div className="bg-white shadow rounded-lg p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-500">Total Expenses</p>
+                    <p className="text-2xl font-bold">
+                      ৳{totalExpense.toLocaleString()}
+                    </p>
+                  </div>
+                  <FaArrowDown className="h-8 w-8 text-red-500" />
+                </div>
+              </div>
+             
+              {/* Sales count (example: can be from backend) */}
+              <div className="bg-white shadow rounded-lg p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-500">Total Sales</p>
+                    <p className="text-2xl font-bold">{revenueData.length * 5}</p>
+                  </div>
+                  <div className="h-8 w-8 bg-blue-100 rounded-full flex items-center justify-center">
+                    <span className="text-blue-600 font-bold"><FaCartPlus /></span>
+                  </div>
+                </div>
+              </div>
+            </div>
       {/* Charts */}
       <div
         className={`grid gap-6 ${
@@ -116,9 +159,6 @@ export default function Dashboard({ isMobile }) {
           </div>
         </div>
       </div>
-
-      {/* Recent Activity */}
-      {/* Recent Activity */}
 <div className="bg-white rounded-xl shadow p-4">
   <h2 className="text-lg font-semibold mb-4">Recent Activity</h2>
   <div className="space-y-4">
@@ -169,3 +209,4 @@ export default function Dashboard({ isMobile }) {
     </div>
   );
 }
+export default Dashboard;
