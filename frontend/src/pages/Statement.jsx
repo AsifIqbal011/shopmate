@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from "react";
 
-export default function PendingInvoices() {
+export default function Statement() {
   const [invoices, setInvoices] = useState([
     {
       id: 1,

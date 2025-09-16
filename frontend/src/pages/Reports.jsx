@@ -7,7 +7,7 @@ import {
   FaFileInvoice,
   FaPlus,
   FaFileAlt,
-  FaCartPlus
+  FaCartPlus,
 } from "react-icons/fa";
 import {
   LineChart,
@@ -41,7 +41,7 @@ const Reports = ({ isMobile, onPageChange }) => {
   //       const res = await axios.get(
   //         (`${API_BASE}/reports/?timeframe=${selectedTimeframe}`)
   //       );
-  //       setReportData(res.data); 
+  //       setReportData(res.data);
   //     } catch (err) {
   //       console.error("Error fetching report data:", err);
   //     }
@@ -62,29 +62,34 @@ const Reports = ({ isMobile, onPageChange }) => {
       <Link
         onClick={() => onPageChange?.("pending-invoice")}
         className="px-3 py-2 text-sm rounded-full bg-yellow-500 decoration-0 border hover:bg-gray-50 text-white flex items-center gap-1"
-      to="/create-invoice">
+        to="/create-invoice"
+      >
         <FaFileInvoice /> Invoice Pending
       </Link>
       <Link
         onClick={() => onPageChange?.("create-invoice")}
         className="px-3 py-2 text-sm rounded-full bg-red-600 border hover:bg-gray-50 text-white flex items-center gap-1"
       >
-  <Link
-  to="/expenses"
-  className="px-3 py-2 text-sm rounded-full bg-red-600 border hover:bg-gray-50 text-white flex items-center gap-1"
->
-<FaPlus /> Add Expenses
-</Link>
-
-       
+        <Link
+          to="/expenses"
+          className="px-3 py-2 text-sm rounded-full bg-red-600 border hover:bg-gray-50 text-white flex items-center gap-1"
+        >
+          <FaPlus /> Add Expenses
+        </Link>
       </Link>
-      <Link className="px-3 py-2 text-sm rounded-full bg-purple-600 border hover:bg-gray-50 text-white flex items-center gap-1"
-      to="/pending-invoices" >
+      <Link
+        className="px-3 py-2 text-sm rounded-full bg-purple-600 border hover:bg-gray-50 text-white flex items-center gap-1"
+        to="/pending-invoices"
+      >
+        <FaFileAlt /> Button
+      </Link>
+      <Link
+        className="px-3 py-2 text-sm rounded-full bg-purple-600 border hover:bg-gray-50 text-white flex items-center gap-1"
+        to="/statement"
+      >
         <FaFileAlt /> Statement
       </Link>
-    
     </div>
-    
   );
 
   const renderMainReports = () => (
@@ -135,7 +140,9 @@ const Reports = ({ isMobile, onPageChange }) => {
               <p className="text-2xl font-bold">{reportData.length * 5}</p>
             </div>
             <div className="h-8 w-8 bg-blue-100 rounded-full flex items-center justify-center">
-              <span className="text-blue-600 font-bold"><FaCartPlus /></span>
+              <span className="text-blue-600 font-bold">
+                <FaCartPlus />
+              </span>
             </div>
           </div>
         </div>

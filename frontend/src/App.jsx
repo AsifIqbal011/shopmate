@@ -22,6 +22,7 @@ import Docs from "./pages/Docs";
 import Contact from "./pages/Contact"; 
 import Logout from "./components/Logout";
 import Expense from "./pages/Expense";
+import Statement from "./pages/Statement";
 
 function App() {
   return (
@@ -46,6 +47,7 @@ function App() {
         <Route path="employees" element={<Employees />} />
         <Route path="settings" element={<Settings />} />
         <Route path="pending-invoices" element={<PendingInvoices />} />
+        <Route path="statement" element={<Statement />} />
         <Route path="logout" element={<Logout />} />
          <Route path="expenses" element={<Expense />} />
       </Route>
