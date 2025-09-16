@@ -69,7 +69,14 @@ const Reports = ({ isMobile, onPageChange }) => {
         onClick={() => onPageChange?.("create-invoice")}
         className="px-3 py-2 text-sm rounded-full bg-red-600 border hover:bg-gray-50 text-white flex items-center gap-1"
       >
-        <FaPlus /> Add Expenses
+  <Link
+  to="/expenses"
+  className="px-3 py-2 text-sm rounded-full bg-red-600 border hover:bg-gray-50 text-white flex items-center gap-1"
+>
+<FaPlus /> Add Expenses
+</Link>
+
+       
       </Link>
       <Link className="px-3 py-2 text-sm rounded-full bg-purple-600 border hover:bg-gray-50 text-white flex items-center gap-1"
       to="/pending-invoices" >
