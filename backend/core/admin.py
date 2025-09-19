@@ -10,4 +10,5 @@ admin.site.register([  Profile,
     Customer,
     Sale,
     SaleItem,
-    Invoice])
+    Invoice,
+    Expense])

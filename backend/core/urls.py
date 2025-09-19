@@ -12,7 +12,8 @@ from .views import (
     SaleItemViewSet,
     InvoiceViewSet,
     ExpenseViewSet,
-    ReportSummary,
+    ReportSummary
+
 )
 
 router = DefaultRouter()
@@ -27,8 +28,11 @@ router.register(r'sale-items', SaleItemViewSet)
 router.register(r'invoices', InvoiceViewSet)
 router.register(r'expenses', ExpenseViewSet, basename='expense')
 
+
+
 urlpatterns = [
     path('', home, name='home'),
     path('api/', include(router.urls)),
     path('reports/summary/', ReportSummary.as_view(), name="report-summary"),
+
 ]

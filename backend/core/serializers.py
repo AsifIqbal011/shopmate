@@ -17,7 +17,6 @@ class CustomUserCreateSerializer(UserCreateSerializer):
         extra_kwargs = {'password': {'write_only': True}}
 
     def validate(self, attrs):
-        # Store profile data temporarily
         self.profile_data = {
             'full_name': attrs.pop('full_name'),
             'phone': attrs.pop('phone'),
@@ -27,12 +26,9 @@ class CustomUserCreateSerializer(UserCreateSerializer):
 
     @transaction.atomic
     def create(self, validated_data):
-        # Create the user
         user = super().create(validated_data)
-        # Create profile
         Profile.objects.create(user=user, **self.profile_data)
         return user
-
 
 class CustomUserSerializer(serializers.ModelSerializer):
     phone = serializers.CharField(source='profile.phone', read_only=True)
@@ -42,25 +38,23 @@ class CustomUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('id', 'username', 'email', 'full_name', 'phone', 'profile_pic')
+
 class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
         fields = '__all__'
 
-
 class ShopSerializer(serializers.ModelSerializer):
-    owner = serializers.ReadOnlyField(source='owner.id')  # read-only, automatically set
+    owner = serializers.ReadOnlyField(source='owner.id')
 
     class Meta:
         model = Shop
         fields = ['id', 'name', 'address', 'phone', 'shop_logo', 'email', 'owner']
-        read_only_fields = ['id', 'owner']   
+        read_only_fields = ['id', 'owner']
 
 class ShopMembershipSerializer(serializers.ModelSerializer):
-    shop = ShopSerializer(read_only=True)   # show full shop info when reading
-    shop_id = serializers.PrimaryKeyRelatedField(  # accept shop id when creating
-        queryset=Shop.objects.all(), source="shop", write_only=True
-    )
+    shop = ShopSerializer(read_only=True)
+    shop_id = serializers.PrimaryKeyRelatedField(queryset=Shop.objects.all(), source="shop", write_only=True)
 
     class Meta:
         model = ShopMembership
@@ -84,14 +78,13 @@ class CategorySerializer(serializers.ModelSerializer):
 
 class ProductSerializer(serializers.ModelSerializer):
     image = serializers.ImageField(required=False)
-    category = CategorySerializer(read_only=True)   # Show full category details
-    category_id = serializers.PrimaryKeyRelatedField(
-        queryset=Category.objects.all(), source="category", write_only=True
-    )
+    category = CategorySerializer(read_only=True)
+    category_id = serializers.PrimaryKeyRelatedField(queryset=Category.objects.all(), source="category", write_only=True)
+
     class Meta:
         model = Product
         fields = '__all__'
-        read_only_fields = ['shop'] 
+        read_only_fields = ['shop']
 
 class SaleItemSerializer(serializers.ModelSerializer):
     class Meta:
@@ -112,7 +105,6 @@ class SaleSerializer(serializers.ModelSerializer):
             SaleItem.objects.create(sale=sale, **item_data)
         return sale
 
-
 class InvoiceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Invoice
@@ -122,4 +114,5 @@ class ExpenseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Expense
         fields = '__all__'
-        read_only_fields = ['id', 'shop', 'created_at'] 
+        read_only_fields = ['id', 'shop', 'created_at']
+
