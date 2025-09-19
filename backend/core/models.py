@@ -150,4 +150,4 @@ class Expense(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.title} - {self.amount}"
+        return f"{self.title} - {self.amount} - {self.shop.name}"
