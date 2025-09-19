@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { PlusCircle, Trash2 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -11,12 +11,21 @@ import {
 } from "recharts";
 
 export default function Expense() {
-  const [expenses, setExpenses] = useState([
-    { id: 1, title: "Office Rent", amount: 5000, date: "2025-09-01", details: "Monthly office rent" },
-    { id: 2, title: "Internet Bill", amount: 1200, date: "2025-09-05", details: "Broadband connection bill" },
-  ]);
+  // Load expenses from localStorage if available
+  const [expenses, setExpenses] = useState(() => {
+    const saved = localStorage.getItem("expenses");
+    return saved ? JSON.parse(saved) : [
+      { id: 1, title: "Office Rent", amount: 5000, date: "2025-09-01", details: "Monthly office rent" },
+      { id: 2, title: "Internet Bill", amount: 1200, date: "2025-09-05", details: "Broadband connection bill" },
+    ];
+  });
 
   const [formData, setFormData] = useState({ title: "", amount: "", date: "", details: "" });
+
+  // Save expenses to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem("expenses", JSON.stringify(expenses));
+  }, [expenses]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -40,7 +49,7 @@ export default function Expense() {
     setExpenses(expenses.filter((exp) => exp.id !== id));
   };
 
-  // Prepare chart data (group by title)
+  // Prepare chart data
   const chartData = expenses.map((exp) => ({
     name: exp.title,
     amount: exp.amount,
@@ -48,61 +57,23 @@ export default function Expense() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
-      {/* Header */}
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold text-gray-800">💰 Expense Management</h1>
       </div>
 
-      {/* Add Expense Form */}
-      <form
-        onSubmit={handleAddExpense}
-        className="bg-white shadow-md rounded-lg p-6 space-y-4"
-      >
+      <form onSubmit={handleAddExpense} className="bg-white shadow-md rounded-lg p-6 space-y-4">
         <h2 className="text-xl font-semibold text-blue-600 mb-2 flex items-center gap-2">
           <PlusCircle className="w-6 h-6" /> Add New Expense
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-          <input
-            type="text"
-            name="title"
-            placeholder="Expense Title"
-            value={formData.title}
-            onChange={handleChange}
-            className="border rounded-lg px-3 py-2 w-full"
-          />
-          <input
-            type="number"
-            name="amount"
-            placeholder="Amount"
-            value={formData.amount}
-            onChange={handleChange}
-            className="border rounded-lg px-3 py-2 w-full"
-          />
-          <input
-            type="date"
-            name="date"
-            value={formData.date}
-            onChange={handleChange}
-            className="border rounded-lg px-3 py-2 w-full"
-          />
-          <input
-            type="text"
-            name="details"
-            placeholder="Details"
-            value={formData.details}
-            onChange={handleChange}
-            className="border rounded-lg px-3 py-2 w-full"
-          />
+          <input type="text" name="title" placeholder="Expense Title" value={formData.title} onChange={handleChange} className="border rounded-lg px-3 py-2 w-full" />
+          <input type="number" name="amount" placeholder="Amount" value={formData.amount} onChange={handleChange} className="border rounded-lg px-3 py-2 w-full" />
+          <input type="date" name="date" value={formData.date} onChange={handleChange} className="border rounded-lg px-3 py-2 w-full" />
+          <input type="text" name="details" placeholder="Details" value={formData.details} onChange={handleChange} className="border rounded-lg px-3 py-2 w-full" />
         </div>
-        <button
-          type="submit"
-          className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition"
-        >
-          Add Expense
-        </button>
+        <button type="submit" className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">Add Expense</button>
       </form>
 
-      {/* Report Chart */}
       <div className="bg-white shadow-md rounded-lg p-6">
         <h2 className="text-xl font-semibold text-blue-600 mb-4">📊 Expense Report</h2>
         <div className="h-64">
@@ -118,7 +89,6 @@ export default function Expense() {
         </div>
       </div>
 
-      {/* Expense Table */}
       <div className="bg-white shadow-md rounded-lg p-6">
         <h2 className="text-xl font-semibold text-blue-600 mb-4">📝 Expense List</h2>
         <table className="w-full border-collapse">
@@ -139,10 +109,7 @@ export default function Expense() {
                 <td className="p-3">{exp.date}</td>
                 <td className="p-3 text-gray-600">{exp.details || "—"}</td>
                 <td className="p-3">
-                  <button
-                    onClick={() => handleDelete(exp.id)}
-                    className="text-red-600 hover:text-red-800 flex items-center gap-1"
-                  >
+                  <button onClick={() => handleDelete(exp.id)} className="text-red-600 hover:text-red-800 flex items-center gap-1">
                     <Trash2 className="w-5 h-5" /> Delete
                   </button>
                 </td>
@@ -150,9 +117,7 @@ export default function Expense() {
             ))}
             {expenses.length === 0 && (
               <tr>
-                <td colSpan="5" className="text-center text-gray-500 py-4">
-                  No expenses added yet.
-                </td>
+                <td colSpan="5" className="text-center text-gray-500 py-4">No expenses added yet.</td>
               </tr>
             )}
           </tbody>
