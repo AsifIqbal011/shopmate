@@ -6,6 +6,7 @@ import {
   FaSave,
   FaExclamationTriangle,
   FaArchive,
+  FaUpload
 } from "react-icons/fa";
 
 const mockBranches = [
@@ -306,12 +307,20 @@ const Settings = () => {
                   onChange={handleChange}
                   className="w-full border p-2 rounded"
                 />
+                <label
+                  htmlFor="shop_logo"
+                  className="flex items-center px-3 py-2 bg-blue-600 text-white rounded-lg cursor-pointer hover:bg-blue-700 transition"
+                >
+                  <FaUpload className="mr-2" />
+                  Upload
+                </label>
                 <input
                   type="file"
+                  id="shop_logo"
                   name="shop_logo"
                   accept="image/*"
                   onChange={handleChange}
-                  className="w-full"
+                  className="hidden"
                 />
                 <button
                   type="submit"

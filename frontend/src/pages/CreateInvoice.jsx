@@ -156,18 +156,18 @@ const CreateInvoice = () => {
   };
 
   return (
-    <div className="w-full min-h-screen bg-gray-50 p-6 space-y-6">
+    <div className="w-full min-h-screen bg-white p-6 space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 mb-10">
         <Link
-          to="/reports"
+          to="/pending-invoices"
           className="p-2 text-black hover:text-blue-700 rounded"
         >
           <FaArrowLeft />
         </Link>
-        <div>
-          <h1 className="text-2xl font-bold text-gray-800">Create Invoice</h1>
-          <p className="text-gray-600">
+        <div className="m-auto">
+          <h1 className="text-3xl font-bold text-center mb-2">Create Invoice</h1>
+          <p className="text-gray-500 text-center">
             Create a new customizable invoice for customers
           </p>
         </div>

@@ -35,7 +35,7 @@ class ShopMembership(models.Model):
         ('employee', 'Employee')
     ]
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     shop = models.ForeignKey(Shop, on_delete=models.CASCADE)
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='employee')
 
@@ -47,7 +47,7 @@ class Branch(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     shop = models.ForeignKey(Shop, on_delete=models.CASCADE)
     branch_name = models.CharField(max_length=100)
-    employee = models.CharField(max_length=255,blank=True, null=True)
+    employees = models.ManyToManyField(settings.AUTH_USER_MODEL, blank=True, related_name="branches")
     phone = models.CharField(max_length=20, blank=True, null=True)
     location = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -70,15 +70,17 @@ class Customer(models.Model):
 
 class Category(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    name = models.CharField(max_length=100, unique=True)
+    name = models.CharField(max_length=100)
+    shop = models.ForeignKey(Shop, on_delete=models.CASCADE,blank=True, null=True)
     description = models.TextField(blank=True, null=True)  # optional description
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
+        unique_together = ('shop', 'name')
         ordering = ["name"]
 
     def __str__(self):
-        return self.name
+        return f"{self.name} ({self.shop.name})"
 
 class Product(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -140,6 +142,7 @@ class Invoice(models.Model):
 class Expense(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     shop = models.ForeignKey(Shop, on_delete=models.CASCADE)
+    branch = models.ForeignKey(Branch, on_delete=models.SET_NULL, null=True, blank=True)
     title = models.CharField(max_length=255)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     date = models.DateField()

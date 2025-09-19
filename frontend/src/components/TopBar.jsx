@@ -25,7 +25,7 @@ const TopBar = () => {
               <img
                 src={user.profile_pic}
                 alt="Profile"
-                className="w-10 h-10 rounded-full mt-4"
+                className="w-10 h-10 rounded-full"
               />
             ) : (
               <div className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-200">

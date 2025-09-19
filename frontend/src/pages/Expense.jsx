@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { PlusCircle, Trash2 } from "lucide-react";
+import { FaArrowLeft } from "react-icons/fa";
+import { Link } from "react-router-dom";
 import {
   ResponsiveContainer,
   BarChart,
@@ -12,11 +14,28 @@ import {
 
 export default function Expense() {
   const [expenses, setExpenses] = useState([
-    { id: 1, title: "Office Rent", amount: 5000, date: "2025-09-01", details: "Monthly office rent" },
-    { id: 2, title: "Internet Bill", amount: 1200, date: "2025-09-05", details: "Broadband connection bill" },
+    {
+      id: 1,
+      title: "Office Rent",
+      amount: 5000,
+      date: "2025-09-01",
+      details: "Monthly office rent",
+    },
+    {
+      id: 2,
+      title: "Internet Bill",
+      amount: 1200,
+      date: "2025-09-05",
+      details: "Broadband connection bill",
+    },
   ]);
 
-  const [formData, setFormData] = useState({ title: "", amount: "", date: "", details: "" });
+  const [formData, setFormData] = useState({
+    title: "",
+    amount: "",
+    date: "",
+    details: "",
+  });
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -47,12 +66,22 @@ export default function Expense() {
   }));
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8 lg:w-256">
       {/* Header */}
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-gray-800">💰 Expense Management</h1>
+      <div className="flex items-center gap-3">
+        <Link
+          to="/reports"
+          className="p-2 text-black hover:text-blue-700 rounded"
+        >
+          <FaArrowLeft />
+        </Link>
+        <div className="m-auto">
+          <h1 className="text-3xl font-bold text-center mb-2">
+            💰Expense Management
+          </h1>
+          <p className="text-gray-500 text-center">Manage your all exprese here</p>
+        </div>
       </div>
-
       {/* Add Expense Form */}
       <form
         onSubmit={handleAddExpense}
@@ -102,25 +131,11 @@ export default function Expense() {
         </button>
       </form>
 
-      {/* Report Chart */}
-      <div className="bg-white shadow-md rounded-lg p-6">
-        <h2 className="text-xl font-semibold text-blue-600 mb-4">📊 Expense Report</h2>
-        <div className="h-64">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Bar dataKey="amount" fill="#3b82f6" radius={[6, 6, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-
       {/* Expense Table */}
       <div className="bg-white shadow-md rounded-lg p-6">
-        <h2 className="text-xl font-semibold text-blue-600 mb-4">📝 Expense List</h2>
+        <h2 className="text-xl font-semibold text-blue-600 mb-4">
+          📝 Expense List
+        </h2>
         <table className="w-full border-collapse">
           <thead>
             <tr className="bg-gray-100 text-left">
@@ -135,7 +150,9 @@ export default function Expense() {
             {expenses.map((exp) => (
               <tr key={exp.id} className="border-b hover:bg-gray-50">
                 <td className="p-3">{exp.title}</td>
-                <td className="p-3 text-green-600 font-medium">৳{exp.amount}</td>
+                <td className="p-3 text-green-600 font-medium">
+                  ৳{exp.amount}
+                </td>
                 <td className="p-3">{exp.date}</td>
                 <td className="p-3 text-gray-600">{exp.details || "—"}</td>
                 <td className="p-3">
@@ -158,7 +175,23 @@ export default function Expense() {
           </tbody>
         </table>
       </div>
+      {/* Report Chart */}
+      <div className="bg-white shadow-md rounded-lg p-6">
+        <h2 className="text-xl font-semibold text-blue-600 mb-4">
+          📊 Expense Report
+        </h2>
+        <div className="h-64">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={chartData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip />
+              <Bar dataKey="amount" fill="#3b82f6" radius={[6, 6, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
     </div>
   );
 }
-

@@ -62,26 +62,15 @@ const Reports = ({ isMobile, onPageChange }) => {
       <Link
         onClick={() => onPageChange?.("pending-invoice")}
         className="px-3 py-2 text-sm rounded-full bg-yellow-500 decoration-0 border hover:bg-gray-50 text-white flex items-center gap-1"
-        to="/create-invoice"
+        to="/pending-invoices"
       >
         <FaFileInvoice /> Invoice Pending
       </Link>
-      <Link
-        onClick={() => onPageChange?.("create-invoice")}
-        className="px-3 py-2 text-sm rounded-full bg-red-600 border hover:bg-gray-50 text-white flex items-center gap-1"
-      >
         <Link
           to="/expenses"
           className="px-3 py-2 text-sm rounded-full bg-red-600 border hover:bg-gray-50 text-white flex items-center gap-1"
         >
           <FaPlus /> Add Expenses
-        </Link>
-      </Link>
-      <Link
-        className="px-3 py-2 text-sm rounded-full bg-purple-600 border hover:bg-gray-50 text-white flex items-center gap-1"
-        to="/pending-invoices"
-      >
-        <FaFileAlt /> Button
       </Link>
       <Link
         className="px-3 py-2 text-sm rounded-full bg-purple-600 border hover:bg-gray-50 text-white flex items-center gap-1"

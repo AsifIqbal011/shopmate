@@ -46,6 +46,18 @@ class ShopViewSet(viewsets.ModelViewSet):
             return Response(ShopSerializer(shop).data, status=200)
         return Response({"detail": "No shop found"}, status=404)
 
+class ShopMembershipViewSet(viewsets.ModelViewSet):
+    serializer_class = ShopMembershipSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        # Users only see memberships where they are the user
+        return ShopMembership.objects.filter(user=self.request.user)
+
+    def perform_create(self, serializer):
+        # Auto-assign the current user
+        serializer.save(user=self.request.user)
+
 class BranchViewSet(viewsets.ModelViewSet):
     queryset = Branch.objects.all()
     serializer_class = BranchSerializer
@@ -57,6 +69,11 @@ class CustomerViewSet(viewsets.ModelViewSet):
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all().order_by("name")
     serializer_class = CategorySerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        shop = get_user_shop(self.request.user)
+        return Category.objects.filter(shop=shop)
 
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all().order_by("-created_at")
