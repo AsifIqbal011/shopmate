@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from "react";
-
+import { FaArrowLeft } from "react-icons/fa";
+import { Link } from "react-router-dom";
 export default function Statement() {
   const [invoices, setInvoices] = useState([
     {
@@ -55,13 +56,21 @@ export default function Statement() {
   }, [invoices, search, sortBy]);
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="w-full min-h-screen bg-white p-6 space-y-6 lg:w-256">
       {/* Header */}
-      <div className="text-center">
-        <h1 className="text-3xl font-bold mb-2">Sales Statement</h1>
-        <p className="text-gray-500">
-          Manage and review all customer invoices
-        </p>
+       <div className="flex items-center gap-3 mb-10">
+        <Link
+          to="/reports"
+          className="p-2 text-black hover:text-blue-700 rounded"
+        >
+          <FaArrowLeft />
+        </Link>
+        <div className="m-auto">
+          <h1 className="text-3xl font-bold text-center mb-2">Sales Statement</h1>
+          <p className="text-gray-500 text-center">
+            Manage and review all customer invoices
+          </p>
+        </div>
       </div>
 
       {/* Search & Sort */}
@@ -71,7 +80,7 @@ export default function Statement() {
           placeholder="Search by customer"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="border p-2 flex-1 rounded"
+          className="border p-2 flex-1 rounded "
         />
 
         <select

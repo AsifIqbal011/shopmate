@@ -1,4 +1,6 @@
 import React, { useState, useMemo } from "react";
+import { FaArrowLeft } from "react-icons/fa";
+import { Link } from "react-router-dom";
 
 export default function PendingInvoices() {
   const [invoices, setInvoices] = useState([
@@ -38,9 +40,7 @@ export default function PendingInvoices() {
 
   const markComplete = (id) => {
     setInvoices((prev) =>
-      prev.map((inv) =>
-        inv.id === id ? { ...inv, status: "Completed" } : inv
-      )
+      prev.map((inv) => (inv.id === id ? { ...inv, status: "Completed" } : inv))
     );
   };
 
@@ -54,9 +54,11 @@ export default function PendingInvoices() {
     });
 
     if (sortBy === "date") {
-      data = data.slice().sort(
-        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-      );
+      data = data
+        .slice()
+        .sort(
+          (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+        );
     } else if (sortBy === "branch") {
       data = data.slice().sort((a, b) => a.branch.localeCompare(b.branch));
     }
@@ -64,12 +66,23 @@ export default function PendingInvoices() {
   }, [invoices, filter, search, sortBy]);
 
   return (
-    <div className="p-6 space-y-6">
-      <h1 className="text-3xl font-bold text-center mb-2">Sales Statement</h1>
-      <p className="text-gray-500 text-center">
-        Manage and review all customer invoices
-      </p>
-
+    <div className="p-6 space-y-6 lg:w-256">
+      <div className="flex items-center gap-3 mb-10">
+        <Link
+          to="/reports"
+          className="p-2 text-black hover:text-blue-700 rounded"
+        >
+          <FaArrowLeft />
+        </Link>
+        <div className="m-auto">
+          <h1 className="text-3xl font-bold text-center mb-2">
+            Pending Statement
+          </h1>
+          <p className="text-gray-500 text-center">
+            Manage and review all customer invoices
+          </p>
+        </div>
+      </div>
       {/* Filters */}
       <div className="flex flex-col md:flex-row md:items-center gap-3">
         <select
@@ -105,16 +118,22 @@ export default function PendingInvoices() {
 
       {/* Table */}
       <div className="overflow-x-auto bg-white shadow">
-        <table className="w-full border-collapse">
+        <table className="w-full">
           <thead>
             <tr className="bg-gray-100 text-gray-700">
-              <th className="border px-3 py-2 text-left">Customer</th>
-              <th className="border px-3 py-2 text-right">Amount</th>
-              <th className="border px-3 py-2 text-left">Sold by</th>
-              <th className="border px-3 py-2 text-left">Branch</th>
-              <th className="border px-3 py-2 text-center">Date</th>
-              <th className="border px-3 py-2 text-center">Status</th>
-              <th className="border px-3 py-2 text-center">Action</th>
+              <th className="border-x-gray-400 px-3 py-2 text-left">
+                Customer
+              </th>
+              <th className="border-x-gray-400 px-3 py-2 text-right">Amount</th>
+              <th className="border-x-gray-400 px-3 py-2 text-left">Sold by</th>
+              <th className="border-x-gray-400 px-3 py-2 text-left">Branch</th>
+              <th className="border-x-gray-400 px-3 py-2 text-center">Date</th>
+              <th className="border-x-gray-400 px-3 py-2 text-center">
+                Status
+              </th>
+              <th className="border-x-gray-400 px-3 py-2 text-center">
+                Action
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -122,18 +141,18 @@ export default function PendingInvoices() {
               <tr
                 key={inv.id}
                 onClick={() => setSelectedRow(inv.id)}
-                className={`border-t cursor-pointer transition hover:bg-gray-100 ${
+                className={`border-t transition hover:bg-gray-100 ${
                   selectedRow === inv.id ? "bg-gray-200" : ""
                 }`}
               >
-                <td className="border px-3 py-2">{inv.customer}</td>
-                <td className="border px-3 py-2 text-right">
+                <td className="px-3 py-2">{inv.customer}</td>
+                <td className="px-3 py-2 text-center">
                   ৳{inv.amount.toLocaleString()}
                 </td>
-                <td className="border px-3 py-2">{inv.soldBy}</td>
-                <td className="border px-3 py-2">{inv.branch}</td>
-                <td className="border px-3 py-2 text-center">{inv.date}</td>
-                <td className="border px-3 py-2 text-center">
+                <td className="px-3 py-2">{inv.soldBy}</td>
+                <td className="px-3 py-2">{inv.branch}</td>
+                <td className="px-3 py-2 text-center">{inv.date}</td>
+                <td className="px-3 py-2 text-center">
                   <span
                     className={`px-2 py-1 text-xs ${
                       inv.status === "Pending"
@@ -146,17 +165,14 @@ export default function PendingInvoices() {
                     {inv.status}
                   </span>
                 </td>
-                <td className="border px-3 py-2 text-center">
+                <td className=" px-3 py-2 text-center">
                   {inv.status !== "Completed" ? (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        markComplete(inv.id);
-                      }}
-                      className="bg-green-600 text-white px-3 py-1 text-sm"
+                    <Link
+                      to="/create-invoice"
+                      className="bg-orange-600 rounded-md text-white px-3 py-1.5 hover:text-gray-800 text-sm"
                     >
-                      Complete
-                    </button>
+                      Confirm
+                    </Link>
                   ) : (
                     <span className="text-gray-400">Done</span>
                   )}

@@ -1,6 +1,19 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import *
+from .views import (
+    home,
+    ProfileViewSet,
+    ShopViewSet,
+    BranchViewSet,
+    CustomerViewSet,
+    CategoryViewSet,
+    ProductViewSet,
+    SaleViewSet,
+    SaleItemViewSet,
+    InvoiceViewSet,
+    ExpenseViewSet,
+    ReportSummary,
+)
 
 router = DefaultRouter()
 router.register(r'profiles', ProfileViewSet)
@@ -15,7 +28,7 @@ router.register(r'invoices', InvoiceViewSet)
 router.register(r'expenses', ExpenseViewSet, basename='expense')
 
 urlpatterns = [
-    path('', home), 
-    path('', include(router.urls)),
+    path('', home, name='home'),
+    path('api/', include(router.urls)),
     path('reports/summary/', ReportSummary.as_view(), name="report-summary"),
 ]

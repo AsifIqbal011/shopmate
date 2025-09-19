@@ -57,12 +57,15 @@ class ShopSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'owner']   
 
 class ShopMembershipSerializer(serializers.ModelSerializer):
-    shop = ShopSerializer(read_only=True)
+    shop = ShopSerializer(read_only=True)   # show full shop info when reading
+    shop_id = serializers.PrimaryKeyRelatedField(  # accept shop id when creating
+        queryset=Shop.objects.all(), source="shop", write_only=True
+    )
 
     class Meta:
         model = ShopMembership
-        fields = '__all__'
-        read_only_fields = ['user', 'shop']
+        fields = ['id', 'user', 'shop', 'shop_id', 'role', 'joined_at']
+        read_only_fields = ['id', 'user', 'joined_at']
 
 class BranchSerializer(serializers.ModelSerializer):
     class Meta:
@@ -96,11 +99,19 @@ class SaleItemSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class SaleSerializer(serializers.ModelSerializer):
-    sale_items = SaleItemSerializer(many=True, read_only=True)
+    sale_items = SaleItemSerializer(many=True)
 
     class Meta:
         model = Sale
         fields = '__all__'
+
+    def create(self, validated_data):
+        items_data = validated_data.pop('sale_items')
+        sale = Sale.objects.create(**validated_data)
+        for item_data in items_data:
+            SaleItem.objects.create(sale=sale, **item_data)
+        return sale
+
 
 class InvoiceSerializer(serializers.ModelSerializer):
     class Meta:

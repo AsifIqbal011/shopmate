@@ -230,10 +230,10 @@ const ProductList = () => {
                         {getStatus(product.quantity)}
                       </span>
                     </td>
-                    <td className="p-3 flex justify-center gap-2">
+                    <td className="p-3 text-center gap-2">
                       <button
                         onClick={() => handleEdit(product.id)}
-                        className="p-1 hover:text-blue-600"
+                        className="p-1 mr-1 hover:text-blue-600"
                       >
                         <FaEdit />
                       </button>
