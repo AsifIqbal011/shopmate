@@ -1,26 +1,81 @@
 // src/pages/CreateSale.jsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import Select from "react-select";
 import { FaPlus, FaMinus, FaTrash, FaPrint } from "react-icons/fa";
+import axios from "axios";
 
 const CreateSale = () => {
   const user = JSON.parse(localStorage.getItem("user"));
+  const token = localStorage.getItem("token");
+
   const [customer, setCustomer] = useState({
-    name: "",
+    full_name: "",
     phone: "",
     email: "",
+    address: "",
   });
 
-  const [items, setItems] = useState([
-    { id: "1", name: "Click Fan", price: 3000, quantity: 1 },
-    { id: "2", name: "Light Bulb", price: 600, quantity: 2 },
-  ]);
-
+  const [products, setProducts] = useState([]);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [items, setItems] = useState([]);
   const [showReceipt, setShowReceipt] = useState(false);
+
+  // ✅ Fetch products from backend
+  useEffect(() => {
+    axios
+      .get("http://localhost:8000/api/products/", {
+        headers: { Authorization: `Token ${token}` },
+      })
+      .then((res) => setProducts(res.data))
+      .catch((err) => console.error(err));
+  }, [token]);
+
+  const productOptions = products.map((p) => ({
+    value: p.id,
+    label: p.name,
+    price: p.selling_price,
+  }));
+
+  const [shopId, setShopId] = useState(null);
+
+  useEffect(() => {
+  if (!token) return;
+
+  const fetchShop = async () => {
+    try {
+      const res = await axios.get("http://localhost:8000/api/my_shop/", {
+        headers: { Authorization: `Token ${token}` },
+      });
+
+      console.log("My shop response:", res.data);
+
+      // If API returns an array
+      if (Array.isArray(res.data) && res.data.length > 0) {
+        setShopId(res.data[0].id); // take the first shop
+      } else if (res.data && res.data.id) {
+        setShopId(res.data.id); // single object case
+      } else {
+        alert("No shop found for this user");
+      }
+    } catch (err) {
+      console.error("Error fetching shop:", err);
+    }
+  };
+
+  fetchShop();
+}, [token]);
+
 
   const addItem = () => {
     setItems([
       ...items,
-      { id: Date.now().toString(), name: "", price: 0, quantity: 1 },
+      {
+        id: Date.now().toString(),
+        product_id: "",
+        name: "",
+        price: 0,
+        quantity: 1,
+      },
     ]);
   };
 
@@ -28,9 +83,9 @@ const CreateSale = () => {
     setItems(items.filter((item) => item.id !== id));
   };
 
-  const updateItem = (id, field, value) => {
-    setItems(
-      items.map((item) => (item.id === id ? { ...item, [field]: value } : item))
+  const updateItem = (id, updates) => {
+    setItems((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, ...updates } : item))
     );
   };
 
@@ -38,14 +93,75 @@ const CreateSale = () => {
     (sum, item) => sum + item.price * item.quantity,
     0
   );
-  const tax = subtotal * 0.05; // 5% tax
+  const tax = subtotal * 0.05;
   const total = subtotal + tax;
 
-  const generateReceipt = () => {
-    setShowReceipt(true);
+  // ✅ Save sale
+  const handleCompleteSale = async () => {
+    try {
+      // Save customer
+      console.log("User object:", user);
+      console.log("Shop ID sent:", user.shop_id);
+
+      const customerRes = await axios.post(
+        "http://localhost:8000/api/customers/",
+        {
+          full_name: customer.full_name,
+          phone: customer.phone,
+          email: customer.email,
+          address: customer.address,
+          shop: user.shop_id
+        },
+        { headers: { Authorization: `Token ${token}` } }
+      );
+
+      const customerId = customerRes.data.id;
+
+      // Save sale
+      const saleRes = await axios.post(
+        "http://localhost:8000/api/sales/",
+        {
+          shop: user.shop_id,
+          employee: user.id,
+          customer: customerId,
+          total_amount: total,
+          profit_amount: 0,
+          invoice_number: `INV-${Date.now()}`,
+        },
+        { headers: { Authorization: `Token ${token}` } }
+      );
+
+      const saleId = saleRes.data.id;
+
+      // Save items
+      for (const item of items) {
+        await axios.post(
+          "http://localhost:8000/api/sale-items/",
+          {
+            sale: saleId,
+            product: item.product_id,
+            quantity: item.quantity,
+            price: item.price,
+            total: item.price * item.quantity,
+          },
+          { headers: { Authorization: `Token ${token}` } }
+        );
+      }
+
+      alert("Sale completed successfully!");
+      setShowReceipt(true);
+    } catch (err) {
+      if (err.response) {
+        console.error("Customer API error:", err.response.data);
+        alert("Customer error: " + JSON.stringify(err.response.data));
+      } else {
+        console.error(err);
+        alert("Error completing sale");
+      }
+    }
   };
 
-  // Receipt View
+  // ✅ Receipt View
   if (showReceipt) {
     return (
       <div className="p-6 lg:w-256">
@@ -53,27 +169,24 @@ const CreateSale = () => {
           id="printRecipt"
           className="max-w-md mx-auto bg-white shadow rounded-lg p-6"
         >
-          {/* Header */}
           <div className="text-center mb-6">
-            {user?.profile_pic && (
-              <img
-                src={user.profile_pic}
-                alt="Profile"
-                className="w-10 h-10 rounded-full mt-4 mx-auto"
-              />
-            )}
             <h2 className="font-bold text-xl">MY SHOP</h2>
             <p className="text-sm text-gray-500">Receipt</p>
           </div>
 
-          {/* Customer Info */}
           <div className="mb-4 border-b pb-3 text-sm">
             <p>
-              <strong>Customer:</strong> {customer.name || "Walk-in Customer"}
+              <strong>Customer:</strong>{" "}
+              {customer.full_name || "Walk-in Customer"}
             </p>
             {customer.phone && (
               <p>
                 <strong>Phone:</strong> {customer.phone}
+              </p>
+            )}
+            {customer.address && (
+              <p>
+                <strong>Address:</strong> {customer.address}
               </p>
             )}
             <p>
@@ -81,15 +194,12 @@ const CreateSale = () => {
             </p>
           </div>
 
-          {/* Items */}
           <div className="mb-4">
             {items.map((item) => (
               <div key={item.id} className="flex justify-between py-1 text-sm">
                 <div>
-                  <p className="text-start truncate max-w-[120px]">
-                    {item.name}
-                  </p>
-                  <p className="text-start text-gray-500 text-xs">
+                  <p>{item.name}</p>
+                  <p className="text-gray-500 text-xs">
                     {item.quantity} x ৳{item.price}
                   </p>
                 </div>
@@ -98,7 +208,6 @@ const CreateSale = () => {
             ))}
           </div>
 
-          {/* Totals */}
           <div className="border-t pt-3 space-y-1 text-sm">
             <div className="flex justify-between">
               <span>Subtotal:</span>
@@ -114,6 +223,7 @@ const CreateSale = () => {
             </div>
           </div>
         </div>
+
         <div className="mt-6 flex gap-3 w-sm m-auto">
           <button
             onClick={() => setShowReceipt(false)}
@@ -129,7 +239,6 @@ const CreateSale = () => {
               const printContents = receiptElement.innerHTML;
               const originalContents = document.body.innerHTML;
 
-              // Replace with only receipt for printing
               document.body.innerHTML = `<div style="display: flex; justify-content: center; margin-top: 20px;">
                  <div style="max-width: 400px; width: 100%; padding: 16px; border: 1px solid #ddd; border-radius: 8px;">
                   ${printContents}
@@ -137,10 +246,8 @@ const CreateSale = () => {
                 </div>`;
 
               window.print();
-
-              // Restore page after printing
               document.body.innerHTML = originalContents;
-              window.location.reload(); // reload React app
+              window.location.reload();
             }}
             className="w-1/2 py-2 bg-orange-500 text-white rounded-lg flex items-center justify-center gap-2"
           >
@@ -151,15 +258,14 @@ const CreateSale = () => {
     );
   }
 
-  // Main Create Sale View
+  // ✅ Main Create Sale Form
   return (
     <div className="p-6 bg-white">
       <h1 className="text-2xl font-bold mb-2">Create Sale</h1>
-      <p className="text-gray-600 mb-2">Genarate Invoices and make sales</p>
+      <p className="text-gray-600 mb-2">Generate invoices and make sales</p>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Sales Form */}
+        {/* Customer Form */}
         <div className="space-y-6">
-          {/* Customer Info */}
           <div className="bg-white shadow rounded-lg p-6">
             <h2 className="font-semibold mb-4">Customer Information</h2>
             <div className="space-y-3">
@@ -167,9 +273,9 @@ const CreateSale = () => {
                 type="text"
                 placeholder="Customer Name"
                 className="w-full border p-2 rounded"
-                value={customer.name}
+                value={customer.full_name}
                 onChange={(e) =>
-                  setCustomer({ ...customer, name: e.target.value })
+                  setCustomer({ ...customer, full_name: e.target.value })
                 }
               />
               <input
@@ -188,6 +294,15 @@ const CreateSale = () => {
                 value={customer.email}
                 onChange={(e) =>
                   setCustomer({ ...customer, email: e.target.value })
+                }
+              />
+              <input
+                type="text"
+                placeholder="Address (optional)"
+                className="w-full border p-2 rounded"
+                value={customer.address}
+                onChange={(e) =>
+                  setCustomer({ ...customer, address: e.target.value })
                 }
               />
             </div>
@@ -209,43 +324,49 @@ const CreateSale = () => {
               {items.map((item) => (
                 <div
                   key={item.id}
-                  className="flex flex-wrap gap-3 items-center p-3 bg-gray-50 rounded"
+                  className="flex flex-wrap gap-3 items-center p-2 bg-gray-50 rounded"
                 >
-                  {/* Product name input */}
-                  <input
-                    type="text"
-                    placeholder="Product name"
-                    className="flex-1 min-w-[100px] border p-2 rounded"
-                    value={item.name}
-                    onChange={(e) =>
-                      updateItem(item.id, "name", e.target.value)
-                    }
-                  />
+                  <div className="flex-1 min-w-[150px]">
+                    <Select
+                      options={productOptions}
+                      value={
+                        item.product_id
+                          ? productOptions.find(
+                              (p) => p.value === item.product_id
+                            )
+                          : null
+                      }
+                      onChange={(selected) => {
+                        updateItem(item.id, {
+                          product_id: selected.value,
+                          name: selected.label,
+                          price: parseFloat(selected.price),
+                        });
+                      }}
+                      placeholder="Product Name"
+                      isSearchable
+                    />
+                  </div>
 
-                  {/* Price input */}
+                  {/* Price */}
                   <input
                     type="number"
-                    placeholder="Price"
-                    className="w-full sm:w-20 border p-2 rounded"
+                    className="w-full sm:w-20 border text-center p-1 rounded"
                     value={item.price}
                     onChange={(e) =>
-                      updateItem(
-                        item.id,
-                        "price",
-                        parseFloat(e.target.value) || 0
-                      )
+                      updateItem(item.id, {
+                        price: parseFloat(e.target.value) || 0,
+                      })
                     }
                   />
 
-                  {/* Quantity buttons */}
+                  {/* Quantity */}
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() =>
-                        updateItem(
-                          item.id,
-                          "quantity",
-                          Math.max(1, item.quantity - 1)
-                        )
+                        updateItem(item.id, {
+                          quantity: Math.max(1, item.quantity - 1),
+                        })
                       }
                       className="p-2 bg-gray-200 rounded-full"
                     >
@@ -254,7 +375,7 @@ const CreateSale = () => {
                     <span>{item.quantity}</span>
                     <button
                       onClick={() =>
-                        updateItem(item.id, "quantity", item.quantity + 1)
+                        updateItem(item.id, { quantity: item.quantity + 1 })
                       }
                       className="p-2 bg-gray-200 rounded-full"
                     >
@@ -262,7 +383,7 @@ const CreateSale = () => {
                     </button>
                   </div>
 
-                  {/* Remove button */}
+                  {/* Remove */}
                   <button
                     onClick={() => removeItem(item.id)}
                     className="p-2 text-red-500 hover:text-red-700"
@@ -278,15 +399,14 @@ const CreateSale = () => {
         {/* Order Summary */}
         <div className="bg-white shadow rounded-lg p-6 h-fit">
           <h2 className="font-semibold mb-4">Order Summary</h2>
-
           <div className="space-y-2 mb-4">
             {items.map((item) => (
               <div key={item.id} className="flex justify-between text-sm">
                 <div>
-                  <p className="text-start">
+                  <p className="truncate max-w-[120px]">
                     {item.name || "Untitled Product"}
                   </p>
-                  <p className="text-start text-gray-500">
+                  <p className="text-gray-500 text-xs">
                     {item.quantity} x ৳{item.price}
                   </p>
                 </div>
@@ -312,7 +432,7 @@ const CreateSale = () => {
 
           <div className="mt-6 space-y-3">
             <button
-              onClick={generateReceipt}
+              onClick={handleCompleteSale}
               className="w-full py-2 bg-orange-500 text-white rounded hover:bg-orange-600"
             >
               Complete Sale

@@ -106,21 +106,39 @@ class ProductSerializer(serializers.ModelSerializer):
 class SaleItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = SaleItem
-        fields = '__all__'
+        fields = "__all__"
+        read_only_fields = ["id"]
 
 class SaleSerializer(serializers.ModelSerializer):
     sale_items = SaleItemSerializer(many=True)
 
     class Meta:
         model = Sale
-        fields = '__all__'
+        fields = "__all__"
+        read_only_fields = ["id", "shop", "employee", "created_at"]
 
     def create(self, validated_data):
-        items_data = validated_data.pop('sale_items')
+        items_data = validated_data.pop("sale_items", [])
         sale = Sale.objects.create(**validated_data)
         for item_data in items_data:
             SaleItem.objects.create(sale=sale, **item_data)
         return sale
+    
+    def update(self, instance, validated_data):
+        items_data = validated_data.pop("sale_items", None)
+
+        # update sale fields
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+
+        if items_data is not None:
+            # clear old items & recreate
+            instance.sale_items.all().delete()
+            for item_data in items_data:
+                SaleItem.objects.create(sale=instance, **item_data)
+
+        return instance
 
 
 class InvoiceSerializer(serializers.ModelSerializer):

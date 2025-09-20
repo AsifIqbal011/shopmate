@@ -239,12 +239,31 @@ class ProductViewSet(viewsets.ModelViewSet):
         serializer.save(shop=shop)
 
 class SaleViewSet(viewsets.ModelViewSet):
-    queryset = Sale.objects.all()
+    queryset = Sale.objects.all().order_by("-created_at") 
     serializer_class = SaleSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        shop = get_user_shop(self.request.user)
+        return Sale.objects.filter(shop=shop)
+
+    def perform_create(self, serializer):
+        shop = get_user_shop(self.request.user)
+        serializer.save(shop=shop, employee=self.request.user)
+
 
 class SaleItemViewSet(viewsets.ModelViewSet):
     queryset = SaleItem.objects.all()
     serializer_class = SaleItemSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        shop = get_user_shop(self.request.user)
+        return SaleItem.objects.filter(sale__shop=shop)
+
+    def perform_create(self, serializer):
+        # shop is inherited from the linked Sale
+        serializer.save()
 
 class InvoiceViewSet(viewsets.ModelViewSet):
     queryset = Invoice.objects.all()
