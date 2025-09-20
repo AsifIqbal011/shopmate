@@ -129,18 +129,7 @@ const ProductList = () => {
       );
 
       let updatedProduct = res.data;
-
-      // Normalize category
-      if (updatedProduct.category) {
-        if (typeof updatedProduct.category === "number") {
-          const matched = categories.find((c) => c.id === updatedProduct.category);
-          updatedProduct.category = matched || { id: updatedProduct.category, name: "" };
-        }
-      } else if (editForm.category_id) {
-        const matched = categories.find((c) => c.id === editForm.category_id);
-        if (matched) updatedProduct.category = matched;
-      }
-
+      
       setProducts((prev) =>
         prev.map((p) => (p.id === id ? { ...p, ...updatedProduct } : p))
       );
@@ -201,7 +190,7 @@ const ProductList = () => {
                         <h3 className="font-medium truncate">{product.name}</h3>
                       )}
 
-                      {editId === product.id ? (
+                      {/* {editId === product.id ? (
                         <select
                           value={editForm.category_id ?? ""}
                           onChange={(e) =>
@@ -219,11 +208,11 @@ const ProductList = () => {
                             </option>
                           ))}
                         </select>
-                      ) : (
+                      ) : ( */}
                         <p className="text-sm text-gray-500">
                           {product.category?.name}
                         </p>
-                      )}
+                      {/* )} */}
                     </div>
 
                     <span
@@ -389,7 +378,7 @@ const ProductList = () => {
                   </td>
 
                   <td className="p-3">
-                    {editId === product.id ? (
+                    {/* {editId === product.id ? (
                       <select
                         value={editForm.category_id ?? ""}
                         onChange={(e) =>
@@ -408,9 +397,9 @@ const ProductList = () => {
                           </option>
                         ))}
                       </select>
-                    ) : (
+                    ) : ( */}
                       <span>{product.category?.name || "No category"}</span>
-                    )}
+                 { /*  )} */}
                   </td>
 
                   <td className="p-3 text-center">

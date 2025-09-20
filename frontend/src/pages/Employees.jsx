@@ -1,87 +1,113 @@
-// src/pages/Employees.jsx
-import React, { useState } from "react";
-import {
-  FaPlus,
-  FaEdit,
-  FaTrash,
-  FaSearch,
-  FaEnvelope,
-  FaPhone,
-} from "react-icons/fa";
-
-const mockEmployees = [
-  {
-    id: "1",
-    name: "John Smith",
-    email: "john.smith@shopmate.com",
-    phone: "+1 (555) 123-4567",
-    branch: "Main Store",
-    role: "Sales Manager",
-    status: "Active",
-    joinDate: "2024-01-15",
-    sales: 45,
-    image:
-      "https://images.unsplash.com/photo-1709715357519-2a84f9765e57?auto=format&fit=crop&w=80&q=60",
-  },
-  {
-    id: "2",
-    name: "Sarah Johnson",
-    email: "sarah.johnson@shopmate.com",
-    phone: "+1 (555) 234-5678",
-    branch: "Branch A",
-    role: "Sales Representative",
-    status: "Active",
-    joinDate: "2024-03-10",
-    sales: 32,
-    image:
-      "https://images.unsplash.com/photo-1513128034602-7814ccaddd4e?auto=format&fit=crop&w=80&q=60",
-  },
-  {
-    id: "3",
-    name: "Mike Wilson",
-    email: "mike.wilson@shopmate.com",
-    phone: "+1 (555) 345-6789",
-    branch: "Branch B",
-    role: "Sales Representative",
-    status: "Active",
-    joinDate: "2024-05-20",
-    sales: 28,
-    image:
-      "https://images.unsplash.com/photo-1584940121730-93ffb8aa88b0?auto=format&fit=crop&w=80&q=60",
-  },
-];
+import React, { useState, useEffect } from "react";
+import { FaEdit, FaTrash, FaSearch, FaCheck, FaTimes, FaEnvelope,FaPhone } from "react-icons/fa";
+import axios from "axios";
 
 export default function Employees() {
   const [searchTerm, setSearchTerm] = useState("");
   const [branchFilter, setBranchFilter] = useState("all");
-  const [employees, setEmployees] = useState(mockEmployees);
+  const [employees, setEmployees] = useState([]);
+  const [requests, setRequests] = useState([]);
+  const [branches, setBranches] = useState([]);
 
+  const token = localStorage.getItem("token");
+
+  // Fetch approved employees
+  const fetchEmployees = async () => {
+    try {
+      const res = await axios.get("http://127.0.0.1:8000/api/employees/", {
+        headers: { Authorization: `Token ${token}` },
+      });
+      setEmployees(res.data);
+
+      // Populate branch options dynamically
+      const uniqueBranches = [
+        ...new Set(res.data.map((emp) => emp.branch).filter(Boolean)),
+      ];
+      setBranches(uniqueBranches);
+    } catch (err) {
+      console.error("Error fetching employees:", err);
+    }
+  };
+
+  // Fetch pending join requests
+  const fetchRequests = async () => {
+    try {
+      const res = await axios.get(
+        "http://127.0.0.1:8000/api/join-requests/",
+        { headers: { Authorization: `Token ${token}` } }
+      );
+      setRequests(res.data);
+    } catch (err) {
+      console.error("Error fetching requests:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchEmployees();
+    fetchRequests();
+  }, []);
+
+  // Approve request
+ const handleApprove = async (id) => {
+  try {
+    await axios.post(
+      `http://127.0.0.1:8000/api/join-requests/${id}/handle/`,
+      { action: "approve" },  // <-- send action in body
+      { headers: { Authorization: `Token ${token}` } }
+    );
+    fetchEmployees();
+    fetchRequests();
+  } catch (err) {
+    console.error("Error approving request:", err);
+  }
+};
+
+const handleReject = async (id) => {
+  try {
+    await axios.post(
+      `http://127.0.0.1:8000/api/join-requests/${id}/handle/`,
+      { action: "reject" },  // <-- send action in body
+      { headers: { Authorization: `Token ${token}` } }
+    );
+    fetchRequests();
+  } catch (err) {
+    console.error("Error rejecting request:", err);
+  }
+};
+
+
+
+const removeEmployee = async (id) => {
+    if (!window.confirm("Are you sure you want to remove this employee?")) return;
+    try {
+      const token = localStorage.getItem("token");
+      await axios.delete(`http://localhost:8000/api/employee/${id}/`, {
+        headers: { Authorization: `Token ${token}` },
+      });
+      setEmployees(employees.filter((p) => p.id !== id));
+    } catch (err) {
+      console.error("Error deleting employee:", err);
+    }
+  };
+
+  // Filter employees based on search and branch
   const filtered = employees.filter((e) => {
-    const searchMatch =
+    const matchesSearch =
       e.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       e.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const branchMatch = branchFilter === "all" || e.branch === branchFilter;
-    return searchMatch && branchMatch;
+    const matchesBranch = branchFilter === "all" || e.branch === branchFilter;
+    return matchesSearch && matchesBranch;
   });
-
-  const addEmployee = () => alert("Add employee logic here");
-  const updateEmployee = (id) => alert(`Update ${id}`);
-  const removeEmployee = (id) => {
-    setEmployees((prev) => prev.filter((emp) => emp.id !== id));
-    alert(`Removed ${id}`);
-  };
 
   return (
     <div className="p-4 space-y-6 lg:w-257">
-    
       <div className="flex flex-col items-center text-center mb-6 gap-3">
         <h1 className="text-3xl font-bold">Employees</h1>
         <p className="text-gray-500 max-w-xl">
-          Manage your team members and track their performance.
+          Manage your team members and approve join requests.
         </p>
       </div>
 
-      {/* Search + Branch Filter + Add Button */}
       <div className="flex flex-col md:flex-row gap-4 justify-between items-center">
         {/* Search */}
         <div className="relative w-full md:w-1/3">
@@ -95,7 +121,7 @@ export default function Employees() {
           />
         </div>
 
-        {/* Branch filter + Add Employee button */}
+        {/* Branch filter */}
         <div className="flex items-center gap-2">
           <select
             value={branchFilter}
@@ -103,21 +129,19 @@ export default function Employees() {
             className="border rounded px-3 py-2"
           >
             <option value="all">All Branches</option>
-            <option value="Main Store">Main Store</option>
-            <option value="Branch A">Branch A</option>
-            <option value="Branch B">Branch B</option>
+            {branches.map((b) => (
+              <option key={b} value={b}>
+                {b}
+              </option>
+            ))}
           </select>
-
-          <button
-            onClick={addEmployee}
-            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition-colors"
-          >
-            <FaPlus /> Add Employee
-          </button>
         </div>
       </div>
 
-      {/* Table for desktop */}
+      {/* Pending Join Requests */}
+      
+
+      {/* Employee Table */}
       <div className="overflow-x-auto hidden md:block">
         <table className="min-w-full border text-sm">
           <thead className="bg-gray-100">
@@ -137,7 +161,7 @@ export default function Employees() {
               <tr key={e.id} className="border-t hover:bg-gray-50">
                 <td className="p-2 flex items-center gap-2">
                   <img
-                    src={e.image}
+                    src={e.image || "/default-avatar.png"}
                     alt={e.name}
                     className="w-8 h-8 rounded-full object-cover"
                   />
@@ -160,16 +184,10 @@ export default function Employees() {
                 <td className="p-2 font-medium">{e.sales}</td>
                 <td className="p-2">{e.joinDate}</td>
                 <td className="p-2 flex gap-2">
-                  <button
-                    onClick={() => updateEmployee(e.id)}
-                    className="p-1 text-blue-600 hover:text-blue-800 transition-colors"
-                  >
+                  <button className="p-1 text-blue-600 hover:text-blue-800">
                     <FaEdit />
                   </button>
-                  <button
-                    onClick={() => removeEmployee(e.id)}
-                    className="p-1 text-red-600 hover:text-red-800 transition-colors"
-                  >
+                  <button onClick={() => removeEmployee(e.id)} className="p-1 text-red-600 hover:text-red-800">
                     <FaTrash />
                   </button>
                 </td>
@@ -179,13 +197,47 @@ export default function Employees() {
         </table>
       </div>
 
-      {/* Card view for mobile */}
-      <div className="grid gap-4 md:hidden">
+      <div className="bg-white p-4 rounded shadow">
+        <h2 className="text-lg font-semibold mb-3">Pending Join Requests</h2>
+        {requests.length === 0 ? (
+          <p className="text-gray-500">No pending requests.</p>
+        ) : (
+          <ul className="divide-y">
+            {requests.map((req) => (
+              <li
+                key={req.id}
+                className="flex justify-between items-center py-2"
+              >
+                <div>
+                  <p className="font-medium">{req.user_name}</p>
+                  <p className="text-sm text-gray-500">{req.user_email}</p>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleApprove(req.id)}
+                    className="px-3 py-1 bg-green-600 text-white rounded flex items-center gap-1"
+                  >
+                    <FaCheck /> Approve
+                  </button>
+                  <button
+                    onClick={() => handleReject(req.id)}
+                    className="px-3 py-1 bg-red-600 text-white rounded flex items-center gap-1"
+                  >
+                    <FaTimes /> Reject
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+        <div className="grid gap-4 md:hidden">
         {filtered.map((e) => (
           <div key={e.id} className="border rounded p-4 shadow-sm">
             <div className="flex items-center gap-3 mb-2">
               <img
-                src={e.image}
+                src={e.profile_pic}
                 alt={e.name}
                 className="w-12 h-12 rounded-full object-cover"
               />

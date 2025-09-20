@@ -1,6 +1,7 @@
 import uuid
 from django.conf import settings
 from django.db import models
+from django.utils import timezone
 
 # Create your models here.
 class Profile(models.Model):
@@ -32,16 +33,26 @@ class Shop(models.Model):
 class ShopMembership(models.Model):
     ROLE_CHOICES = [
         ('owner', 'Owner'),
-        ('employee', 'Employee')
+        ('employee', 'Employee'),
     ]
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+    ]
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     shop = models.ForeignKey(Shop, on_delete=models.CASCADE)
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='employee')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    created_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        unique_together = ('user', 'shop')  # prevent duplicates
 
     def __str__(self):
-        return f"{self.user.username} - {self.shop.name} ({self.role})"
-
+        return f"{self.user.username} - {self.shop.name} ({self.role}, {self.status})"
 
 class Branch(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)

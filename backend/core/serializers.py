@@ -3,6 +3,7 @@ from djoser.serializers import UserCreateSerializer
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from .models import *
+from django.contrib.auth.models import User
 
 User = get_user_model()
 
@@ -61,11 +62,20 @@ class ShopMembershipSerializer(serializers.ModelSerializer):
     shop_id = serializers.PrimaryKeyRelatedField(  # accept shop id when creating
         queryset=Shop.objects.all(), source="shop", write_only=True
     )
+    user = serializers.StringRelatedField(read_only=True)
 
     class Meta:
         model = ShopMembership
-        fields = ['id', 'user', 'shop', 'shop_id', 'role', 'joined_at']
-        read_only_fields = ['id', 'user', 'joined_at']
+        fields = ['id', 'user', 'shop', 'shop_id', 'role', 'status', 'created_at']
+        read_only_fields = ['id', 'user', 'role', 'status', 'created_at']
+
+    def create(self, validated_data):
+        validated_data["user"] = self.context["request"].user
+        validated_data["role"] = "employee"
+        validated_data["status"] = "pending"
+        return super().create(validated_data)
+
+
 
 class BranchSerializer(serializers.ModelSerializer):
     class Meta:

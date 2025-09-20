@@ -12,7 +12,14 @@ from .views import (
     SaleItemViewSet,
     InvoiceViewSet,
     ExpenseViewSet,
-    ReportSummary
+    ReportSummary,
+    shop_search,
+    join_shop,
+    PendingJoinRequestsView,
+    HandleJoinRequestView,
+    EmployeeListView,
+    check_membership_status,
+    my_shop
 )
 
 router = DefaultRouter()
@@ -30,6 +37,13 @@ router.register(r'expenses', ExpenseViewSet, basename='expense')
 urlpatterns = [
     path('', home,name='home'), 
     path('api/', include(router.urls)),
-    path('reports/summary/', ReportSummary.as_view(), name="report-summary"),
-
+    path('api/reports/summary/', ReportSummary.as_view(), name="report-summary"),
+    path("api/my-shop/", my_shop, name="my-shop"),
+    path("api/shop_search/", shop_search, name="shop-search"),
+    path("api/join_shop/", join_shop, name="join-shop"),
+    path("api/join-requests/", PendingJoinRequestsView.as_view(), name="join-requests"),
+     path("api/join-requests/<uuid:request_id>/handle/", HandleJoinRequestView.as_view(), name="handle-join-request"),
+    path("api/employees/", EmployeeListView.as_view(), name="employees"),
+    path("api/check-membership/",check_membership_status,name="check-membership-status"
+),
 ]

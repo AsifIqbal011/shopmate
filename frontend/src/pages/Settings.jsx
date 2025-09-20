@@ -6,7 +6,7 @@ import {
   FaSave,
   FaExclamationTriangle,
   FaArchive,
-  FaUpload
+  FaUpload,
 } from "react-icons/fa";
 
 const mockBranches = [
@@ -43,13 +43,14 @@ const Settings = () => {
 
   const [loading, setLoading] = useState(false);
   const [selectedBranchId, setSelectedBranchId] = useState("");
+ 
 
   // Fetch shop data
   useEffect(() => {
     const fetchShop = async () => {
       try {
         const token = localStorage.getItem("token");
-        const res = await axios.get(`${API_BASE}/shops/me/`, {
+        const res = await axios.get(`${API_BASE}/${canJoinShop?'my-shop/' :'shops/me/'}`, {
           headers: { Authorization: `Token ${token}` },
         });
         setShopData(res.data);
@@ -170,6 +171,64 @@ const Settings = () => {
     }
   };
 
+  const [shopQuery, setShopQuery] = useState("");
+  const [shopResults, setShopResults] = useState([]);
+  const [loadingSearch, setLoadingSearch] = useState(false);
+
+  // search shops by name
+  const handleShopSearch = async () => {
+    if (!shopQuery) return;
+    setLoadingSearch(true);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.get(`${API_BASE}/shop_search/`, {
+        headers: { Authorization: `Token ${token}` },
+        params: { q: shopQuery },
+      });
+      setShopResults(res.data);
+    } catch (err) {
+      console.error("Search error:", err);
+      setShopResults([]);
+    } finally {
+      setLoadingSearch(false);
+    }
+  };
+
+  // send join request
+  const handleJoinRequest = async (shopId) => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.post(
+        `${API_BASE}/join_shop/`,
+        { shop: shopId },
+        { headers: { Authorization: `Token ${token}` } }
+      );
+      alert("Join request sent successfully!");
+    } catch (err) {
+      console.error("Join request error:", err.response?.data || err);
+      alert(err.response?.data?.error || "Failed to send join request");
+    }
+  };
+  //check membership
+  const [canJoinShop, setCanJoinShop] = useState(true);
+  const token = localStorage.getItem("token")
+  useEffect(() => {
+    const fetchMembershipStatus = async () => {
+      try {
+        const token = localStorage.getItem("token")
+        const res = await axios.get(
+          "http://127.0.0.1:8000/api/check-membership/",
+          { headers: { Authorization: `Token ${token}` } }
+        );
+        setCanJoinShop(res.data.can_join_shop);
+      } catch (err) {
+        console.error("Error fetching membership status:", err);
+      }
+    };
+
+    fetchMembershipStatus();
+  }, [token]);
+
   return (
     <div className="min-h-screen bg-white p-6">
       <div className="max-w-6xl mx-auto">
@@ -218,7 +277,7 @@ const Settings = () => {
           </div>
 
           {/* Create Branch */}
-          {shopData.owner ? (
+          {(shopData.owner || !canJoinShop) ? (
             <div className="bg-white shadow rounded-lg p-6">
               <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
                 <FaPlus /> Create New Branch
@@ -330,6 +389,49 @@ const Settings = () => {
                   {loading ? "Saving..." : "Save Shop"}
                 </button>
               </form>
+            </div>
+          )}
+
+          {canJoinShop && (
+            <div className="bg-white shadow rounded-lg p-6">
+              <h3 className="text-lg font-semibold mb-4">Join a Shop</h3>
+              <div className="flex gap-2 mb-4">
+                <input
+                  type="text"
+                  placeholder="Search shop by name"
+                  value={shopQuery}
+                  onChange={(e) => setShopQuery(e.target.value)}
+                  className="w-full border p-2 rounded"
+                />
+                <button
+                  onClick={handleShopSearch}
+                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                >
+                  Search
+                </button>
+              </div>
+
+              {loadingSearch && <p>Loading...</p>}
+
+              <ul className="space-y-2">
+                {shopResults.map((shop) => (
+                  <li
+                    key={shop.id}
+                    className="flex justify-between items-center border p-2 rounded"
+                  >
+                    <div>
+                      <p className="font-medium">{shop.name}</p>
+                      <p className="text-gray-500 text-sm">{shop.address}</p>
+                    </div>
+                    <button
+                      onClick={() => handleJoinRequest(shop.id)}
+                      className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700"
+                    >
+                      Request to Join
+                    </button>
+                  </li>
+                ))}
+              </ul>
             </div>
           )}
 
