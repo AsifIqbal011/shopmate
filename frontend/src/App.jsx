@@ -23,6 +23,7 @@ import Contact from "./pages/Contact";
 import Logout from "./components/Logout";
 import Expense from "./pages/Expense";
 import Statement from "./pages/Statement";
+import Profile from "./pages/Profile";
 
 function App() {
   return (
@@ -49,14 +50,11 @@ function App() {
         <Route path="pending-invoices" element={<PendingInvoices />} />
         <Route path="statement" element={<Statement />} />
         <Route path="logout" element={<Logout />} />
-         <Route path="expenses" element={<Expense />} />
+        <Route path="expenses" element={<Expense />} />
+        <Route path="/profile" element={<Profile />} />
       </Route>
     </Routes>
   );
 }
 
 export default App;
-
-
-
-
