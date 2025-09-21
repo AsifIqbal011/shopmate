@@ -1,8 +1,12 @@
-from .models import ShopMembership
+from .models import *
 
 def get_user_shop(user):
-    try:
-        membership = ShopMembership.objects.get(user=user)
+    shop = Shop.objects.filter(owner=user).first()
+    if shop:
+        return shop
+
+    membership = ShopMembership.objects.filter(user=user, status="approved").first()
+    if membership:
         return membership.shop
-    except ShopMembership.DoesNotExist:
-        return None
+
+    return None

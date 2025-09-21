@@ -3,10 +3,10 @@ from djoser.serializers import UserCreateSerializer
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from .models import *
+from django.contrib.auth.models import User
 
 User = get_user_model()
 
-# ---------------- User ----------------
 class CustomUserCreateSerializer(UserCreateSerializer):
     full_name = serializers.CharField(required=True, write_only=True)
     phone = serializers.CharField(required=True, write_only=True)
@@ -18,6 +18,7 @@ class CustomUserCreateSerializer(UserCreateSerializer):
         extra_kwargs = {'password': {'write_only': True}}
 
     def validate(self, attrs):
+        # Store profile data temporarily
         self.profile_data = {
             'full_name': attrs.pop('full_name'),
             'phone': attrs.pop('phone'),
@@ -27,9 +28,12 @@ class CustomUserCreateSerializer(UserCreateSerializer):
 
     @transaction.atomic
     def create(self, validated_data):
+        # Create the user
         user = super().create(validated_data)
+        # Create profile
         Profile.objects.create(user=user, **self.profile_data)
         return user
+
 
 class CustomUserSerializer(serializers.ModelSerializer):
     phone = serializers.CharField(source='profile.phone', read_only=True)
@@ -39,32 +43,40 @@ class CustomUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('id', 'username', 'email', 'full_name', 'phone', 'profile_pic')
-
-# ---------------- Profile ----------------
 class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
         fields = '__all__'
 
-# ---------------- Shop ----------------
+
 class ShopSerializer(serializers.ModelSerializer):
-    owner = serializers.ReadOnlyField(source='owner.id')
+    owner = serializers.ReadOnlyField(source='owner.id')  # read-only, automatically set
 
     class Meta:
         model = Shop
         fields = ['id', 'name', 'address', 'phone', 'shop_logo', 'email', 'owner']
-        read_only_fields = ['id', 'owner']
+        read_only_fields = ['id', 'owner']   
 
 class ShopMembershipSerializer(serializers.ModelSerializer):
-    shop = ShopSerializer(read_only=True)
-    shop_id = serializers.PrimaryKeyRelatedField(queryset=Shop.objects.all(), source="shop", write_only=True)
+    shop = ShopSerializer(read_only=True)   # show full shop info when reading
+    shop_id = serializers.PrimaryKeyRelatedField(  # accept shop id when creating
+        queryset=Shop.objects.all(), source="shop", write_only=True
+    )
+    user = serializers.StringRelatedField(read_only=True)
 
     class Meta:
         model = ShopMembership
-        fields = ['id', 'user', 'shop', 'shop_id', 'role', 'joined_at']
-        read_only_fields = ['id', 'user', 'joined_at']
+        fields = ['id', 'user', 'shop', 'shop_id', 'role', 'status', 'created_at']
+        read_only_fields = ['id', 'user', 'role', 'status', 'created_at']
 
-# ---------------- Branch / Customer / Category / Product ----------------
+    def create(self, validated_data):
+        validated_data["user"] = self.context["request"].user
+        validated_data["role"] = "employee"
+        validated_data["status"] = "pending"
+        return super().create(validated_data)
+
+
+
 class BranchSerializer(serializers.ModelSerializer):
     class Meta:
         model = Branch
@@ -82,100 +94,60 @@ class CategorySerializer(serializers.ModelSerializer):
 
 class ProductSerializer(serializers.ModelSerializer):
     image = serializers.ImageField(required=False)
-    category = CategorySerializer(read_only=True)
-    category_id = serializers.PrimaryKeyRelatedField(queryset=Category.objects.all(), source="category", write_only=True)
-
+    category = CategorySerializer(read_only=True)   # Show full category details
+    category_id = serializers.PrimaryKeyRelatedField(
+        queryset=Category.objects.all(), source="category", write_only=True
+    )
     class Meta:
         model = Product
         fields = '__all__'
-        read_only_fields = ['shop']
+        read_only_fields = ['shop'] 
 
-# ---------------- SaleItem ----------------
 class SaleItemSerializer(serializers.ModelSerializer):
-    product_id = serializers.PrimaryKeyRelatedField(
-        queryset=Product.objects.all(), source="product"
-    )
-    name = serializers.CharField(write_only=True, required=False)
-    price = serializers.DecimalField(max_digits=10, decimal_places=2, required=False)
-
     class Meta:
         model = SaleItem
-        fields = ['id', 'product_id', 'name', 'price', 'quantity', 'sale']
-        read_only_fields = ['id', 'sale']
+        fields = "__all__"
+        read_only_fields = ["id"]
 
-
-# ---------------- Sale ----------------
-# serializers.py
 class SaleSerializer(serializers.ModelSerializer):
     sale_items = SaleItemSerializer(many=True)
-    customer = CustomerSerializer()
 
     class Meta:
         model = Sale
-        fields = '__all__'
+        fields = "__all__"
+        read_only_fields = ["id", "shop", "employee", "created_at"]
 
-    @transaction.atomic
     def create(self, validated_data):
-        customer_data = validated_data.pop('customer')
-        items_data = validated_data.pop('sale_items')
-        shop = validated_data.get('shop')
-
-        # Create/Get Customer
-        customer, _ = Customer.objects.get_or_create(
-            phone=customer_data.get('phone'),
-            defaults={
-                'full_name': customer_data.get('full_name', ''),
-                'email': customer_data.get('email', ''),
-                'shop': shop
-            }
-        )
-
-        # Create Sale
-        sale = Sale.objects.create(customer=customer, shop=shop, **validated_data)
-
-        # Create SaleItems
-        for item in items_data:
-            if 'product' in item:  # linked product
-                SaleItem.objects.create(sale=sale, product=item['product'], quantity=item['quantity'], price=item.get('price', item['product'].price))
-            else:  # custom item
-                SaleItem.objects.create(sale=sale, name=item.get('name'), price=item.get('price', 0), quantity=item['quantity'])
-
-        return sale
-
-    @transaction.atomic
-    def create(self, validated_data):
-        customer_data = validated_data.pop('customer')
-        items_data = validated_data.pop('sale_items')
-        shop = validated_data.get('shop')
-
-        # Create or get customer
-        customer, created = Customer.objects.get_or_create(
-            phone=customer_data.get('phone'),
-            defaults={
-                'full_name': customer_data.get('full_name'),
-                'email': customer_data.get('email', ''),
-                'shop': shop
-            }
-        )
-
-        sale = Sale.objects.create(customer=customer, shop=shop, **validated_data)
-
+        items_data = validated_data.pop("sale_items", [])
+        sale = Sale.objects.create(**validated_data)
         for item_data in items_data:
             SaleItem.objects.create(sale=sale, **item_data)
-
         return sale
+    
+    def update(self, instance, validated_data):
+        items_data = validated_data.pop("sale_items", None)
 
-# ---------------- Invoice ----------------
+        # update sale fields
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+
+        if items_data is not None:
+            # clear old items & recreate
+            instance.sale_items.all().delete()
+            for item_data in items_data:
+                SaleItem.objects.create(sale=instance, **item_data)
+
+        return instance
+
+
 class InvoiceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Invoice
         fields = '__all__'
 
-# ---------------- Expense ----------------
 class ExpenseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Expense
         fields = '__all__'
-        read_only_fields = ['id', 'shop', 'created_at']
-
-
+        read_only_fields = ['id', 'shop','created_at']
