@@ -1,18 +1,20 @@
 // src/pages/CreateSale.jsx
 import React, { useState } from "react";
+import axios from "axios";
 import { FaPlus, FaMinus, FaTrash, FaPrint } from "react-icons/fa";
 
 const CreateSale = () => {
   const user = JSON.parse(localStorage.getItem("user"));
+  const token = localStorage.getItem("token"); // JWT token
   const [customer, setCustomer] = useState({
-    name: "",
+    full_name: "",
     phone: "",
     email: "",
   });
 
   const [items, setItems] = useState([
-    { id: "1", name: "Click Fan", price: 3000, quantity: 1 },
-    { id: "2", name: "Light Bulb", price: 600, quantity: 2 },
+    { id: "1", name: "Click Fan", price: 3000, quantity: 1, product: null },
+    { id: "2", name: "Light Bulb", price: 600, quantity: 2, product: null },
   ]);
 
   const [showReceipt, setShowReceipt] = useState(false);
@@ -20,7 +22,7 @@ const CreateSale = () => {
   const addItem = () => {
     setItems([
       ...items,
-      { id: Date.now().toString(), name: "", price: 0, quantity: 1 },
+      { id: Date.now().toString(), name: "", price: 0, quantity: 1, product: null },
     ]);
   };
 
@@ -38,14 +40,46 @@ const CreateSale = () => {
     (sum, item) => sum + item.price * item.quantity,
     0
   );
-  const tax = subtotal * 0.05; // 5% tax
+  const tax = subtotal * 0.05;
   const total = subtotal + tax;
 
-  const generateReceipt = () => {
-    setShowReceipt(true);
+  // ------------------ POST sale to backend ------------------
+  const submitSale = async () => {
+    if (!token) {
+      alert("Unauthorized! Please login first.");
+      return;
+    }
+
+    const payload = {
+      customer: {
+        full_name: customer.full_name || customer.name,
+        phone: customer.phone,
+        email: customer.email || "",
+      },
+      sale_items: items.map((item) => ({
+        product: item.product, // backend product ID (required)
+        name: item.name,
+        price: item.price,
+        quantity: item.quantity,
+      })),
+    };
+
+    try {
+      const res = await axios.post("http://127.0.0.1:8000/api/sales/", payload, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+      console.log("Sale created:", res.data);
+      setShowReceipt(true);
+    } catch (error) {
+      console.error("Error creating sale:", error.response || error);
+      alert("Error creating sale! Check console for details.");
+    }
   };
 
-  // Receipt View
+  // ---------------- Receipt View ----------------
   if (showReceipt) {
     return (
       <div className="p-6 lg:w-256">
@@ -71,14 +105,8 @@ const CreateSale = () => {
             <p>
               <strong>Customer:</strong> {customer.name || "Walk-in Customer"}
             </p>
-            {customer.phone && (
-              <p>
-                <strong>Phone:</strong> {customer.phone}
-              </p>
-            )}
-            <p>
-              <strong>Date:</strong> {new Date().toLocaleDateString()}
-            </p>
+            {customer.phone && <p><strong>Phone:</strong> {customer.phone}</p>}
+            <p><strong>Date:</strong> {new Date().toLocaleDateString()}</p>
           </div>
 
           {/* Items */}
@@ -86,9 +114,7 @@ const CreateSale = () => {
             {items.map((item) => (
               <div key={item.id} className="flex justify-between py-1 text-sm">
                 <div>
-                  <p className="text-start truncate max-w-[120px]">
-                    {item.name}
-                  </p>
+                  <p className="text-start truncate max-w-[120px]">{item.name}</p>
                   <p className="text-start text-gray-500 text-xs">
                     {item.quantity} x ৳{item.price}
                   </p>
@@ -100,50 +126,20 @@ const CreateSale = () => {
 
           {/* Totals */}
           <div className="border-t pt-3 space-y-1 text-sm">
-            <div className="flex justify-between">
-              <span>Subtotal:</span>
-              <span>৳{subtotal.toFixed(2)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Tax (5%):</span>
-              <span>৳{tax.toFixed(2)}</span>
-            </div>
-            <div className="flex justify-between font-bold">
-              <span>Total:</span>
-              <span>৳{total.toFixed(2)}</span>
-            </div>
+            <div className="flex justify-between"><span>Subtotal:</span><span>৳{subtotal.toFixed(2)}</span></div>
+            <div className="flex justify-between"><span>Tax (5%):</span><span>৳{tax.toFixed(2)}</span></div>
+            <div className="flex justify-between font-bold"><span>Total:</span><span>৳{total.toFixed(2)}</span></div>
           </div>
         </div>
+
         <div className="mt-6 flex gap-3 w-sm m-auto">
-          <button
-            onClick={() => setShowReceipt(false)}
-            className="w-1/2 py-2 border rounded-lg text-gray-700 bg-white border-black"
-          >
+          <button onClick={() => setShowReceipt(false)}
+            className="w-1/2 py-2 border rounded-lg text-gray-700 bg-white border-black">
             Back
           </button>
           <button
-            onClick={() => {
-              const receiptElement = document.querySelector("#printRecipt");
-              if (!receiptElement) return;
-
-              const printContents = receiptElement.innerHTML;
-              const originalContents = document.body.innerHTML;
-
-              // Replace with only receipt for printing
-              document.body.innerHTML = `<div style="display: flex; justify-content: center; margin-top: 20px;">
-                 <div style="max-width: 400px; width: 100%; padding: 16px; border: 1px solid #ddd; border-radius: 8px;">
-                  ${printContents}
-                 </div>
-                </div>`;
-
-              window.print();
-
-              // Restore page after printing
-              document.body.innerHTML = originalContents;
-              window.location.reload(); // reload React app
-            }}
-            className="w-1/2 py-2 bg-orange-500 text-white rounded-lg flex items-center justify-center gap-2"
-          >
+            onClick={() => window.print()}
+            className="w-1/2 py-2 bg-orange-500 text-white rounded-lg flex items-center justify-center gap-2">
             <FaPrint /> Print
           </button>
         </div>
@@ -151,11 +147,12 @@ const CreateSale = () => {
     );
   }
 
-  // Main Create Sale View
+  // ---------------- Main Create Sale View ----------------
   return (
     <div className="p-6 bg-white">
       <h1 className="text-2xl font-bold mb-2">Create Sale</h1>
-      <p className="text-gray-600 mb-2">Genarate Invoices and make sales</p>
+      <p className="text-gray-600 mb-2">Generate Invoices and make sales</p>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Sales Form */}
         <div className="space-y-6">
@@ -163,32 +160,20 @@ const CreateSale = () => {
           <div className="bg-white shadow rounded-lg p-6">
             <h2 className="font-semibold mb-4">Customer Information</h2>
             <div className="space-y-3">
-              <input
-                type="text"
-                placeholder="Customer Name"
+              <input type="text" placeholder="Full Name"
                 className="w-full border p-2 rounded"
-                value={customer.name}
-                onChange={(e) =>
-                  setCustomer({ ...customer, name: e.target.value })
-                }
+                value={customer.full_name}
+                onChange={(e) => setCustomer({...customer, full_name: e.target.value})}
               />
-              <input
-                type="text"
-                placeholder="Phone Number"
+              <input type="text" placeholder="Phone Number"
                 className="w-full border p-2 rounded"
                 value={customer.phone}
-                onChange={(e) =>
-                  setCustomer({ ...customer, phone: e.target.value })
-                }
+                onChange={(e) => setCustomer({...customer, phone: e.target.value})}
               />
-              <input
-                type="email"
-                placeholder="Email (optional)"
+              <input type="email" placeholder="Email (optional)"
                 className="w-full border p-2 rounded"
                 value={customer.email}
-                onChange={(e) =>
-                  setCustomer({ ...customer, email: e.target.value })
-                }
+                onChange={(e) => setCustomer({...customer, email: e.target.value})}
               />
             </div>
           </div>
@@ -197,78 +182,33 @@ const CreateSale = () => {
           <div className="bg-white shadow rounded-lg p-6">
             <div className="flex justify-between items-center mb-4">
               <h2 className="font-semibold">Sale Items</h2>
-              <button
-                onClick={addItem}
-                className="flex items-center gap-2 px-3 py-1 border rounded hover:bg-gray-100"
-              >
+              <button onClick={addItem} className="flex items-center gap-2 px-3 py-1 border rounded hover:bg-gray-100">
                 <FaPlus /> Add Item
               </button>
             </div>
 
             <div className="space-y-3">
               {items.map((item) => (
-                <div
-                  key={item.id}
-                  className="flex flex-wrap gap-3 items-center p-3 bg-gray-50 rounded"
-                >
-                  {/* Product name input */}
-                  <input
-                    type="text"
-                    placeholder="Product name"
+                <div key={item.id} className="flex flex-wrap gap-3 items-center p-3 bg-gray-50 rounded">
+                  <input type="text" placeholder="Product name"
                     className="flex-1 min-w-[100px] border p-2 rounded"
                     value={item.name}
-                    onChange={(e) =>
-                      updateItem(item.id, "name", e.target.value)
-                    }
+                    onChange={(e) => updateItem(item.id, "name", e.target.value)}
                   />
-
-                  {/* Price input */}
-                  <input
-                    type="number"
-                    placeholder="Price"
+                  <input type="number" placeholder="Price"
                     className="w-full sm:w-20 border p-2 rounded"
                     value={item.price}
-                    onChange={(e) =>
-                      updateItem(
-                        item.id,
-                        "price",
-                        parseFloat(e.target.value) || 0
-                      )
-                    }
+                    onChange={(e) => updateItem(item.id, "price", parseFloat(e.target.value) || 0)}
                   />
-
-                  {/* Quantity buttons */}
                   <div className="flex items-center gap-2">
-                    <button
-                      onClick={() =>
-                        updateItem(
-                          item.id,
-                          "quantity",
-                          Math.max(1, item.quantity - 1)
-                        )
-                      }
-                      className="p-2 bg-gray-200 rounded-full"
-                    >
-                      <FaMinus />
-                    </button>
+                    <button onClick={() => updateItem(item.id, "quantity", Math.max(1, item.quantity - 1))}
+                      className="p-2 bg-gray-200 rounded-full"><FaMinus /></button>
                     <span>{item.quantity}</span>
-                    <button
-                      onClick={() =>
-                        updateItem(item.id, "quantity", item.quantity + 1)
-                      }
-                      className="p-2 bg-gray-200 rounded-full"
-                    >
-                      <FaPlus />
-                    </button>
+                    <button onClick={() => updateItem(item.id, "quantity", item.quantity + 1)}
+                      className="p-2 bg-gray-200 rounded-full"><FaPlus /></button>
                   </div>
-
-                  {/* Remove button */}
-                  <button
-                    onClick={() => removeItem(item.id)}
-                    className="p-2 text-red-500 hover:text-red-700"
-                  >
-                    <FaTrash />
-                  </button>
+                  <button onClick={() => removeItem(item.id)}
+                    className="p-2 text-red-500 hover:text-red-700"><FaTrash /></button>
                 </div>
               ))}
             </div>
@@ -278,17 +218,12 @@ const CreateSale = () => {
         {/* Order Summary */}
         <div className="bg-white shadow rounded-lg p-6 h-fit">
           <h2 className="font-semibold mb-4">Order Summary</h2>
-
           <div className="space-y-2 mb-4">
             {items.map((item) => (
               <div key={item.id} className="flex justify-between text-sm">
                 <div>
-                  <p className="text-start">
-                    {item.name || "Untitled Product"}
-                  </p>
-                  <p className="text-start text-gray-500">
-                    {item.quantity} x ৳{item.price}
-                  </p>
+                  <p>{item.name || "Untitled Product"}</p>
+                  <p className="text-gray-500">{item.quantity} x ৳{item.price}</p>
                 </div>
                 <p>৳{(item.price * item.quantity).toFixed(2)}</p>
               </div>
@@ -296,30 +231,16 @@ const CreateSale = () => {
           </div>
 
           <div className="border-t pt-3 space-y-2 text-sm">
-            <div className="flex justify-between">
-              <span>Subtotal:</span>
-              <span>৳{subtotal.toFixed(2)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Tax (5%):</span>
-              <span>৳{tax.toFixed(2)}</span>
-            </div>
-            <div className="flex justify-between font-bold text-base">
-              <span>Total:</span>
-              <span>৳{total.toFixed(2)}</span>
-            </div>
+            <div className="flex justify-between"><span>Subtotal:</span><span>৳{subtotal.toFixed(2)}</span></div>
+            <div className="flex justify-between"><span>Tax (5%):</span><span>৳{tax.toFixed(2)}</span></div>
+            <div className="flex justify-between font-bold text-base"><span>Total:</span><span>৳{total.toFixed(2)}</span></div>
           </div>
 
           <div className="mt-6 space-y-3">
-            <button
-              onClick={generateReceipt}
-              className="w-full py-2 bg-orange-500 text-white rounded hover:bg-orange-600"
-            >
+            <button onClick={submitSale} className="w-full py-2 bg-orange-500 text-white rounded hover:bg-orange-600">
               Complete Sale
             </button>
-            <button className="w-full py-2 border rounded">
-              Save as Draft
-            </button>
+            <button className="w-full py-2 border rounded">Save as Draft</button>
           </div>
         </div>
       </div>
@@ -328,3 +249,4 @@ const CreateSale = () => {
 };
 
 export default CreateSale;
+

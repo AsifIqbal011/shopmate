@@ -1,36 +1,27 @@
-from .serializers import ExpenseSerializer
 from rest_framework import viewsets, permissions, status
-from .models import *
-from .serializers import *
-from django.http import HttpResponse
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .utils import get_user_shop
-from rest_framework.decorators import api_view, action
-from django.utils.timezone import now
+from django.http import HttpResponse
+from django.db import transaction
 from datetime import timedelta
-from django.db.models import Sum
 from collections import defaultdict
+from django.db.models import Sum
+from django.utils.timezone import now
+from .models import *
+from .serializers import *
+from .utils import get_user_shop
 
-
+# ---------------- Home ----------------
 def home(request):
     return HttpResponse("Welcome to ShopMate Backend")
 
-
-@api_view(['GET'])
-def my_shop(request):
-    shop = Shop.objects.filter(owner=request.user).first()
-    if shop:
-        serializer = ShopSerializer(shop)
-        return Response(serializer.data)
-    return Response(None, status=status.HTTP_200_OK)
-
-
+# ---------------- Profile ----------------
 class ProfileViewSet(viewsets.ModelViewSet):
     queryset = Profile.objects.all()
     serializer_class = ProfileSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
-
+# ---------------- Shop ----------------
 class ShopViewSet(viewsets.ModelViewSet):
     serializer_class = ShopSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -42,74 +33,80 @@ class ShopViewSet(viewsets.ModelViewSet):
         shop = serializer.save(owner=self.request.user)
         ShopMembership.objects.create(user=self.request.user, shop=shop, role="owner")
 
-    @action(detail=False, methods=["get"])
-    def me(self, request):
-        shop = Shop.objects.filter(owner=request.user).first()
-        if shop:
-            return Response(ShopSerializer(shop).data, status=200)
-        return Response({"detail": "No shop found"}, status=404)
-
-
-class ShopMembershipViewSet(viewsets.ModelViewSet):
-    serializer_class = ShopMembershipSerializer
+# ---------------- Branch ----------------
+class BranchViewSet(viewsets.ModelViewSet):
+    serializer_class = BranchSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        return ShopMembership.objects.filter(user=self.request.user)
+        shop = get_user_shop(self.request.user)
+        return Branch.objects.filter(shop=shop)
 
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
-
-
-class BranchViewSet(viewsets.ModelViewSet):
-    queryset = Branch.objects.all()
-    serializer_class = BranchSerializer
-
-
+# ---------------- Customer ----------------
 class CustomerViewSet(viewsets.ModelViewSet):
-    queryset = Customer.objects.all()
     serializer_class = CustomerSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
+    def get_queryset(self):
+        shop = get_user_shop(self.request.user)
+        return Customer.objects.filter(shop=shop)
 
+# ---------------- Category ----------------
 class CategoryViewSet(viewsets.ModelViewSet):
-    queryset = Category.objects.all().order_by("name")
     serializer_class = CategorySerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
         shop = get_user_shop(self.request.user)
-        return Category.objects.filter(shop=shop)
+        return Category.objects.filter(shop=shop).order_by("name")
 
-
+# ---------------- Product ----------------
 class ProductViewSet(viewsets.ModelViewSet):
-    queryset = Product.objects.all().order_by("-created_at")
     serializer_class = ProductSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
         shop = get_user_shop(self.request.user)
-        return Product.objects.filter(shop=shop)
+        return Product.objects.filter(shop=shop).order_by("-created_at")
+
+    def perform_create(self, serializer):
+        shop = get_user_shop(self.request.user)
+        serializer.save(shop=shop)
+
+# ---------------- Sale ----------------
+# views.py
+class SaleViewSet(viewsets.ModelViewSet):
+    serializer_class = SaleSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        shop = get_user_shop(self.request.user)
+        return Sale.objects.filter(shop=shop).order_by("-created_at")
 
     def perform_create(self, serializer):
         shop = get_user_shop(self.request.user)
         serializer.save(shop=shop)
 
 
-class SaleViewSet(viewsets.ModelViewSet):
-    queryset = Sale.objects.all()
-    serializer_class = SaleSerializer
-
-
+# ---------------- SaleItem ----------------
 class SaleItemViewSet(viewsets.ModelViewSet):
-    queryset = SaleItem.objects.all()
     serializer_class = SaleItemSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
+    def get_queryset(self):
+        shop = get_user_shop(self.request.user)
+        return SaleItem.objects.filter(sale__shop=shop)
 
+# ---------------- Invoice ----------------
 class InvoiceViewSet(viewsets.ModelViewSet):
-    queryset = Invoice.objects.all()
     serializer_class = InvoiceSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
+    def get_queryset(self):
+        shop = get_user_shop(self.request.user)
+        return Invoice.objects.filter(sale__shop=shop)
 
+# ---------------- Expense ----------------
 class ExpenseViewSet(viewsets.ModelViewSet):
     serializer_class = ExpenseSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -124,7 +121,7 @@ class ExpenseViewSet(viewsets.ModelViewSet):
         shop = get_user_shop(self.request.user)
         serializer.save(shop=shop)
 
-
+# ---------------- Report Summary ----------------
 class ReportSummary(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
@@ -134,7 +131,6 @@ class ReportSummary(APIView):
             return Response({"detail": "No shop found"}, status=status.HTTP_404_NOT_FOUND)
 
         timeframe = request.query_params.get("timeframe", "30days")
-
         if timeframe == "7days":
             start_date = now().date() - timedelta(days=7)
         elif timeframe == "3months":
@@ -144,7 +140,6 @@ class ReportSummary(APIView):
         else:
             start_date = now().date() - timedelta(days=30)
 
-        # ✅ fixed filter
         sales = Sale.objects.filter(shop=shop, created_at__date__gte=start_date)
         expenses = Expense.objects.filter(shop=shop, date__gte=start_date)
 
