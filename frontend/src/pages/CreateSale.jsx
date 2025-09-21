@@ -1,4 +1,3 @@
-// src/pages/CreateSale.jsx
 import React, { useState, useEffect } from "react";
 import Select from "react-select";
 import { FaPlus, FaMinus, FaTrash, FaPrint } from "react-icons/fa";
@@ -36,35 +35,41 @@ const CreateSale = () => {
     price: p.selling_price,
   }));
 
-  const [shopId, setShopId] = useState(null);
+const [shopId, setShopId] = useState(null);
 
-  useEffect(() => {
-  if (!token) return;
-
-  const fetchShop = async () => {
+useEffect(() => {
+  const fetchShopId = async () => {
     try {
-      const res = await axios.get("http://localhost:8000/api/my_shop/", {
+      const res = await axios.get("http://localhost:8000/api/my-shop/", {
         headers: { Authorization: `Token ${token}` },
       });
-
-      console.log("My shop response:", res.data);
-
-      // If API returns an array
-      if (Array.isArray(res.data) && res.data.length > 0) {
-        setShopId(res.data[0].id); // take the first shop
-      } else if (res.data && res.data.id) {
-        setShopId(res.data.id); // single object case
-      } else {
-        alert("No shop found for this user");
-      }
+      setShopId(res.data.id);
     } catch (err) {
-      console.error("Error fetching shop:", err);
+      console.error("Shop fetch error:", err);
+    }
+  };
+
+  fetchShopId();
+}, [token]);
+
+const [shop, setShop] = useState(null);
+
+useEffect(() => {
+  const fetchShop = async () => {
+    try {
+      const res = await axios.get("http://localhost:8000/api/my-shop/", {
+        headers: { Authorization: `Token ${token}` },
+      });
+      setShop(res.data);
+    } catch (err) {
+      console.error("Shop fetch error:", err);
     }
   };
 
   fetchShop();
 }, [token]);
 
+console.log(shopId);
 
   const addItem = () => {
     setItems([
@@ -97,72 +102,64 @@ const CreateSale = () => {
   const total = subtotal + tax;
 
   // ✅ Save sale
-  const handleCompleteSale = async () => {
-    try {
-      // Save customer
-      console.log("User object:", user);
-      console.log("Shop ID sent:", user.shop_id);
+const handleCompleteSale = async () => {
+  try {
+    console.log("User object:", user);
+    console.log("Shop ID sent:", shopId);
 
-      const customerRes = await axios.post(
-        "http://localhost:8000/api/customers/",
-        {
-          full_name: customer.full_name,
-          phone: customer.phone,
-          email: customer.email,
-          address: customer.address,
-          shop: user.shop_id
-        },
-        { headers: { Authorization: `Token ${token}` } }
-      );
+    // Step 1: Save customer
+    const customerRes = await axios.post(
+      "http://localhost:8000/api/customers/",
+      {
+        full_name: customer.full_name,
+        phone: customer.phone,
+        email: customer.email,
+        address: customer.address,
+      },
+      { headers: { Authorization: `Token ${token}` } }
+    );
 
-      const customerId = customerRes.data.id;
+    const customerId = customerRes.data.id;
 
-      // Save sale
-      const saleRes = await axios.post(
-        "http://localhost:8000/api/sales/",
-        {
-          shop: user.shop_id,
-          employee: user.id,
-          customer: customerId,
-          total_amount: total,
-          profit_amount: 0,
-          invoice_number: `INV-${Date.now()}`,
-        },
-        { headers: { Authorization: `Token ${token}` } }
-      );
+    // Step 2: Save sale + items in ONE request
+    const payload = {
+      customer: customerId,
+      total_amount: total,
+      profit_amount: 0,
+      invoice_number: `INV-${Date.now()}`,
+      sale_items: items.map((item) => ({
+         product: item.product_id,
+         quantity: item.quantity,
+         unit_price: item.price,
+         unit_cost: item.cost_price || 0,
+         total_price: item.price * item.quantity,
+         total_cost: (item.cost_price || 0) * item.quantity,
+      })),
+    };
 
-      const saleId = saleRes.data.id;
+    console.log("Final Sale Payload:", payload);
 
-      // Save items
-      for (const item of items) {
-        await axios.post(
-          "http://localhost:8000/api/sale-items/",
-          {
-            sale: saleId,
-            product: item.product_id,
-            quantity: item.quantity,
-            price: item.price,
-            total: item.price * item.quantity,
-          },
-          { headers: { Authorization: `Token ${token}` } }
-        );
-      }
+    await axios.post("http://localhost:8000/api/sales/", payload, {
+      headers: { Authorization: `Token ${token}` },
+    });
 
-      alert("Sale completed successfully!");
-      setShowReceipt(true);
-    } catch (err) {
-      if (err.response) {
-        console.error("Customer API error:", err.response.data);
-        alert("Customer error: " + JSON.stringify(err.response.data));
-      } else {
-        console.error(err);
-        alert("Error completing sale");
-      }
+    alert("Sale completed successfully!");
+    setShowReceipt(true);
+  } catch (err) {
+    if (err.response) {
+      console.error("Sale API error:", err.response.data);
+      alert("Error: " + JSON.stringify(err.response.data));
+    } else {
+      console.error(err);
+      alert("Unexpected error completing sale");
     }
-  };
+  }
+};
 
   // ✅ Receipt View
   if (showReceipt) {
+     const shopName = shop?.name || "My Shop s";
+     const shopImage = shop?.shop_logo? `http://localhost:8000${shop.shop_logo}`: null;
     return (
       <div className="p-6 lg:w-256">
         <div
@@ -170,7 +167,14 @@ const CreateSale = () => {
           className="max-w-md mx-auto bg-white shadow rounded-lg p-6"
         >
           <div className="text-center mb-6">
-            <h2 className="font-bold text-xl">MY SHOP</h2>
+          {shopImage && (
+            <img
+              src={shopImage}
+              alt={shopName}
+              className="mx-auto w-20 h-20 object-cover rounded-full mb-2"
+            />
+          )}
+            <h2 className="font-bold text-xl">{shopName}</h2>
             <p className="text-sm text-gray-500">Receipt</p>
           </div>
 
