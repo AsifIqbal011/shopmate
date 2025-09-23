@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { FaEdit, FaTrash, FaSearch, FaCheck, FaTimes, FaEnvelope,FaPhone } from "react-icons/fa";
 import axios from "axios";
 
-export default function Employees() {
+const Employees=()=> {
   const [searchTerm, setSearchTerm] = useState("");
   const [branchFilter, setBranchFilter] = useState("all");
   const [employees, setEmployees] = useState([]);
@@ -32,10 +32,9 @@ export default function Employees() {
   // Fetch pending join requests
   const fetchRequests = async () => {
     try {
-      const res = await axios.get(
-        "http://127.0.0.1:8000/api/join-requests/",
-        { headers: { Authorization: `Token ${token}` } }
-      );
+      const res = await axios.get("http://127.0.0.1:8000/api/join-requests/", {
+        headers: { Authorization: `Token ${token}` },
+      });
       setRequests(res.data);
     } catch (err) {
       console.error("Error fetching requests:", err);
@@ -48,37 +47,36 @@ export default function Employees() {
   }, []);
 
   // Approve request
- const handleApprove = async (id) => {
-  try {
-    await axios.post(
-      `http://127.0.0.1:8000/api/join-requests/${id}/handle/`,
-      { action: "approve" },  // <-- send action in body
-      { headers: { Authorization: `Token ${token}` } }
-    );
-    fetchEmployees();
-    fetchRequests();
-  } catch (err) {
-    console.error("Error approving request:", err);
-  }
-};
+  const handleApprove = async (id) => {
+    try {
+      await axios.post(
+        `http://127.0.0.1:8000/api/join-requests/${id}/handle/`,
+        { action: "approve" },  
+        { headers: { Authorization: `Token ${token}` } }
+      );
+      fetchEmployees();
+      fetchRequests();
+    } catch (err) {
+      console.error("Error approving request:", err);
+    }
+  };
 
-const handleReject = async (id) => {
-  try {
-    await axios.post(
-      `http://127.0.0.1:8000/api/join-requests/${id}/handle/`,
-      { action: "reject" },  // <-- send action in body
-      { headers: { Authorization: `Token ${token}` } }
-    );
-    fetchRequests();
-  } catch (err) {
-    console.error("Error rejecting request:", err);
-  }
-};
+  const handleReject = async (id) => {
+    try {
+      await axios.post(
+        `http://127.0.0.1:8000/api/join-requests/${id}/handle/`,
+        { action: "reject" }, 
+        { headers: { Authorization: `Token ${token}` } }
+      );
+      fetchRequests();
+    } catch (err) {
+      console.error("Error rejecting request:", err);
+    }
+  };
 
-
-
-const removeEmployee = async (id) => {
-    if (!window.confirm("Are you sure you want to remove this employee?")) return;
+  const removeEmployee = async (id) => {
+    if (!window.confirm("Are you sure you want to remove this employee?"))
+      return;
     try {
       const token = localStorage.getItem("token");
       await axios.delete(`http://localhost:8000/api/employee/${id}/`, {
@@ -139,7 +137,6 @@ const removeEmployee = async (id) => {
       </div>
 
       {/* Pending Join Requests */}
-      
 
       {/* Employee Table */}
       <div className="overflow-x-auto hidden md:block">
@@ -161,7 +158,13 @@ const removeEmployee = async (id) => {
               <tr key={e.id} className="border-t hover:bg-gray-50">
                 <td className="p-2 flex items-center gap-2">
                   <img
-                    src={e.image || "/default-avatar.png"}
+                    src={
+                      e.image
+                        ? typeof e.image === "string"
+                          ? `http://localhost:8000${e.image}`
+                          : e.image.url
+                        : "../public/vite.svg"
+                    }
                     alt={e.name}
                     className="w-8 h-8 rounded-full object-cover"
                   />
@@ -187,7 +190,10 @@ const removeEmployee = async (id) => {
                   <button className="p-1 text-blue-600 hover:text-blue-800">
                     <FaEdit />
                   </button>
-                  <button onClick={() => removeEmployee(e.id)} className="p-1 text-red-600 hover:text-red-800">
+                  <button
+                    onClick={() => removeEmployee(e.id)}
+                    className="p-1 text-red-600 hover:text-red-800"
+                  >
                     <FaTrash />
                   </button>
                 </td>
@@ -232,12 +238,12 @@ const removeEmployee = async (id) => {
         )}
       </div>
 
-        <div className="grid gap-4 md:hidden">
+      <div className="grid gap-4 md:hidden">
         {filtered.map((e) => (
           <div key={e.id} className="border rounded p-4 shadow-sm">
             <div className="flex items-center gap-3 mb-2">
               <img
-                src={e.profile_pic}
+                src={e.profile_pic|| '../public/vite.svg'}
                 alt={e.name}
                 className="w-12 h-12 rounded-full object-cover"
               />
@@ -266,7 +272,6 @@ const removeEmployee = async (id) => {
               <button
                 onClick={() => removeEmployee(e.id)}
                 className="flex-1 border px-2 py-1 rounded text-white bg-red-600 hover:bg-red-700  transition-colors"
-            
               >
                 Remove
               </button>
@@ -277,3 +282,4 @@ const removeEmployee = async (id) => {
     </div>
   );
 }
+export default Employees;

@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState ,useEffect} from "react";
 import { Link } from "react-router-dom";
+import { useShopRole } from "../components/ShopRoleContext"; //useContext
 import {
   FaTachometerAlt,
   FaPlus,
@@ -19,6 +20,8 @@ const Sidebar = () => {
   const [isOpen, setIsOpen] = useState(false); // mobile toggle
 
   const toggleSidebar = () => setIsOpen(!isOpen);
+
+  const { shopRole, approveEmployee, loading } = useShopRole();
 
   return (
     <>
@@ -66,12 +69,14 @@ const Sidebar = () => {
             <Link to="/create-sale" className="text-white">
               <NavItem icon={<MdOutlinePointOfSale />} label="Create Sales" />
             </Link>
+            {!approveEmployee &&(
             <Link to="/reports" className="text-white">
               <NavItem icon={<FaChartBar />} label="Reports & Charts" />
-            </Link>
+            </Link> )}
+            {!approveEmployee &&(
             <Link to="/employees" className="text-white">
               <NavItem icon={<FaUser />} label="Employees" />
-            </Link>
+            </Link> )}
             <Link to="/settings" className="text-white">
               <NavItem icon={<FaCog />} label="Settings" />
             </Link>

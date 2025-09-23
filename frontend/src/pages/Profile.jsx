@@ -57,7 +57,7 @@ export default function Profile() {
   };
 
   return (
-    <div className="max-w-3xl mx-auto p-6">
+    <div className="max-w-3xl mx-auto p-6 lg:w-256">
       <h1 className="text-2xl font-semibold mb-6 text-center">My Profile</h1>
 
       <div className="flex flex-col items-center mb-6">
@@ -139,15 +139,7 @@ export default function Profile() {
           />
         </label>
 
-        <label className="block">
-          <span className="block text-sm font-medium">Username </span>
-          <input
-            name="username"
-            value={user.username}
-            
-            className="w-full border rounded p-2 mt-1 bg-gray-100 cursor-not-allowed"
-          />
-        </label>
+      
       </div>
 
       <button

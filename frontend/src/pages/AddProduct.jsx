@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { FaUpload, FaPlus, FaTimes } from "react-icons/fa";
 import axios from "axios";
+import { useShopRole } from "../components/ShopRoleContext";
 
 const AddProduct = () => {
+  const { shopRole, approveEmployee, loading } = useShopRole();
   const [formData, setFormData] = useState({
     name: "",
     category_id: "",
@@ -155,24 +157,24 @@ const AddProduct = () => {
                 </div>
               </div>
 
-              <div className="grid md:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium">
-                    Cost Price *
-                  </label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    className="w-full border rounded-lg p-2"
-                    placeholder="0.00"
-                    value={formData.cost_price}
-                    onChange={(e) =>
-                      handleInputChange("cost_price", e.target.value)
-                    }
-                    required
-                  />
-                </div>
-
+              <div className={`grid ${approveEmployee ?'grid-cols-2':'md:grid-cols-3'} gap-4 justify-between`}>
+                {!approveEmployee && (
+                  <div>
+                    <label className="block text-sm font-medium">
+                      Cost Price
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      className="w-full border rounded-lg p-2"
+                      placeholder="0.00"
+                      value={formData.cost_price}
+                      onChange={(e) =>
+                        handleInputChange("cost_price", e.target.value)
+                      }
+                    />
+                  </div>
+                )}
                 <div>
                   <label className="block text-sm font-medium">
                     Selling Price *
