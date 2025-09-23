@@ -1,36 +1,41 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { FaArrowLeft } from "react-icons/fa";
 import { Link } from "react-router-dom";
-export default function Statement() {
-  const [invoices, setInvoices] = useState([
-    {
-      id: 1,
-      customer: "Pollob",
-      amount: 6000,
-      soldBy: "Hanji",
-      branch: "Uttora",
-      date: "2025-08-20",
-    },
-    {
-      id: 2,
-      customer: "Mr. Rahman",
-      amount: 7800,
-      soldBy: "Erwin",
-      branch: "Farmgate",
-      date: "2025-08-19",
-    },
-    {
-      id: 3,
-      customer: "Karim",
-      amount: 9500,
-      soldBy: "Flok",
-      branch: "Mirpur",
-      date: "2025-08-18",
-    },
-  ]);
 
+export default function Statement() {
+  const [invoices, setInvoices] = useState([]);
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState("");
+  const token = localStorage.getItem("token"); // backend token
+
+  // Fetch sales from backend
+  const fetchInvoices = async () => {
+    try {
+      const res = await fetch("http://localhost:8000/api/sales/", {
+        headers: { Authorization: `Token ${token}` },
+      });
+      const data = await res.json();
+
+      // Map backend data
+      const mapped = data.map((sale) => ({
+        id: sale.id,
+        customer:
+          sale.customer?.full_name || sale.customer?.username || "Walk-in Customer",
+        amount: sale.total_amount,
+        soldBy: sale.employee?.username || "Unknown",
+        branch: sale.shop?.name || "N/A",
+        date: new Date(sale.created_at).toLocaleDateString(),
+      }));
+
+      setInvoices(mapped);
+    } catch (err) {
+      console.error("Error fetching sales:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchInvoices();
+  }, []);
 
   const filteredInvoices = useMemo(() => {
     let data = [...invoices];
@@ -44,10 +49,7 @@ export default function Statement() {
 
     // Sorting
     if (sortBy === "date") {
-      data.sort(
-        (a, b) =>
-          new Date(b.date).getTime() - new Date(a.date).getTime()
-      );
+      data.sort((a, b) => new Date(b.date) - new Date(a.date));
     } else if (sortBy === "branch") {
       data.sort((a, b) => a.branch.localeCompare(b.branch));
     }
@@ -58,7 +60,7 @@ export default function Statement() {
   return (
     <div className="w-full min-h-screen bg-white p-6 space-y-6 lg:w-256">
       {/* Header */}
-       <div className="flex items-center gap-3 mb-10">
+      <div className="flex items-center gap-3 mb-10">
         <Link
           to="/reports"
           className="p-2 text-black hover:text-blue-700 rounded"
@@ -123,10 +125,7 @@ export default function Statement() {
             ))}
             {filteredInvoices.length === 0 && (
               <tr>
-                <td
-                  colSpan="5"
-                  className="text-center py-4 text-gray-500"
-                >
+                <td colSpan="5" className="text-center py-4 text-gray-500">
                   No records found.
                 </td>
               </tr>

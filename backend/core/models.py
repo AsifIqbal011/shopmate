@@ -15,6 +15,12 @@ class Profile(models.Model):
     
     def __str__(self):
         return f"{self.full_name}"
+    @property
+    def image_url(self):
+        if self.profile_pic:
+         return self.profile_pic.url
+        return ""
+
 
 class Shop(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -29,6 +35,18 @@ class Shop(models.Model):
 
     def __str__(self):
         return f"{self.name}"
+    
+class Branch(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    shop = models.ForeignKey(Shop, on_delete=models.CASCADE, related_name="branches")
+    branch_name = models.CharField(max_length=100)
+    phone = models.CharField(max_length=20, blank=True, null=True)
+    location = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.branch_name} - {self.shop.name}"
+
 
 class ShopMembership(models.Model):
     ROLE_CHOICES = [
@@ -42,29 +60,20 @@ class ShopMembership(models.Model):
     ]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    shop = models.ForeignKey(Shop, on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="memberships")
+    shop = models.ForeignKey(Shop, on_delete=models.CASCADE, related_name="memberships")
+    branch = models.ForeignKey(Branch, on_delete=models.SET_NULL, null=True, blank=True, related_name="memberships")
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='employee')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     created_at = models.DateTimeField(default=timezone.now)
 
     class Meta:
-        unique_together = ('user', 'shop')  # prevent duplicates
+        unique_together = ('user', 'shop', 'branch')  # user can be in multiple branches of same shop
 
     def __str__(self):
-        return f"{self.user.username} - {self.shop.name} ({self.role}, {self.status})"
+        branch_name = self.branch.branch_name if self.branch else "No Branch"
+        return f"{self.user.username} - {self.shop.name} ({branch_name}, {self.role}, {self.status})"
 
-class Branch(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    shop = models.ForeignKey(Shop, on_delete=models.CASCADE)
-    branch_name = models.CharField(max_length=100)
-    employees = models.ManyToManyField(settings.AUTH_USER_MODEL, blank=True, related_name="branches")
-    phone = models.CharField(max_length=20, blank=True, null=True)
-    location = models.TextField(blank=True, null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f"{self.branch_name} - {self.shop.name}"
 
 class Customer(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)

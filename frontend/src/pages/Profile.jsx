@@ -70,7 +70,7 @@ export default function Profile() {
             </div>
           )}
         </div>
-
+          <span className="mb-4 text-xl font-bold"> {user.username}</span>
         <div className="flex gap-3">
           <button
             type="button"

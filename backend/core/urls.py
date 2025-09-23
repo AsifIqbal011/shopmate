@@ -26,7 +26,7 @@ from .views import (
 router = DefaultRouter()
 router.register(r'profiles', ProfileViewSet)
 router.register(r'shops', ShopViewSet, basename='shop')
-router.register(r'branches', BranchViewSet)
+router.register(r'branches', BranchViewSet, basename='branch')
 router.register(r'customers', CustomerViewSet)
 router.register(r'categories', CategoryViewSet)
 router.register(r'products', ProductViewSet)
@@ -44,8 +44,9 @@ urlpatterns = [
     path("api/shop_search/", shop_search, name="shop-search"),
     path("api/join_shop/", join_shop, name="join-shop"),
     path("api/join-requests/", PendingJoinRequestsView.as_view(), name="join-requests"),
-     path("api/join-requests/<uuid:request_id>/handle/", HandleJoinRequestView.as_view(), name="handle-join-request"),
+    path("api/join-requests/<uuid:request_id>/handle/", HandleJoinRequestView.as_view(), name="handle-join-request"),
     path("api/employees/", EmployeeListView.as_view(), name="employees"),
+    path("api/employees/<uuid:id>/", EmployeeListView.as_view(), name="employee-detail"),
     path("api/check-membership/",check_membership_status,name="check-membership-status"
 ),
 ]

@@ -189,6 +189,6 @@ export default function PendingInvoices() {
           </tbody>
         </table>
       </div>
-    </div>
-  );
+    </div>
+  );
 }
