@@ -23,6 +23,7 @@ import Contact from "./pages/Contact";
 import Logout from "./components/Logout";
 import Expense from "./pages/Expense";
 import Statement from "./pages/Statement";
+import Profile from "./pages/Profile";
 
 function App() {
   return (
@@ -36,27 +37,24 @@ function App() {
 
       {/* Protected routes under Layout */}
       <Route path="/" element={<Layout />}>
-        <Route index element={<Dashboard />} /> {/* Default route inside Layout */}
-        <Route path="dashboard" element={<Dashboard />} />
-        <Route path="productlist" element={<ProductList />} />
-        <Route path="add-product" element={<AddProduct />} />
-        <Route path="edit-product/:id" element={<EditProduct />} />
-        <Route path="create-sale" element={<CreateSale />} />
-        <Route path="create-invoice" element={<CreateInvoice />} />
-        <Route path="reports" element={<Reports />} />
-        <Route path="employees" element={<Employees />} />
-        <Route path="settings" element={<Settings />} />
-        <Route path="pending-invoices" element={<PendingInvoices />} />
-        <Route path="statement" element={<Statement />} />
-        <Route path="logout" element={<Logout />} />
-         <Route path="expenses" element={<Expense />} />
+          <Route index element={<Dashboard />} /> {/* Default route inside Layout */}
+          <Route path="dashboard" element={<Dashboard />} />
+          <Route path="productlist" element={<ProductList />} />
+          <Route path="add-product" element={<AddProduct />} />
+          <Route path="edit-product/:id" element={<EditProduct />} />
+          <Route path="create-sale" element={<CreateSale />} />
+          <Route path="create-invoice" element={<CreateInvoice />} />
+          <Route path="reports" element={<Reports />} />
+          <Route path="employees" element={<Employees />} />
+          <Route path="settings" element={<Settings />} />
+          <Route path="pending-invoices" element={<PendingInvoices />} />
+          <Route path="statement" element={<Statement />} />
+          <Route path="logout" element={<Logout />} />
+          <Route path="expenses" element={<Expense />} />
+          <Route path="profile" element={<Profile />} />
       </Route>
     </Routes>
   );
 }
 
 export default App;
-
-
-
-

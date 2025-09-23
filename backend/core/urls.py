@@ -4,6 +4,7 @@ from .views import (
     home,
     ProfileViewSet,
     ShopViewSet,
+    ShopMembershipViewSet,
     BranchViewSet,
     CustomerViewSet,
     CategoryViewSet,
@@ -33,6 +34,7 @@ router.register(r'sales', SaleViewSet)
 router.register(r'sale-items', SaleItemViewSet)
 router.register(r'invoices', InvoiceViewSet)
 router.register(r'expenses', ExpenseViewSet, basename='expense') 
+router.register(r'shopmembership', ShopMembershipViewSet,basename='shopmembership')
 
 urlpatterns = [
     path('', home,name='home'), 

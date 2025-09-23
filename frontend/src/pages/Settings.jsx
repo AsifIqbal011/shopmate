@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { useShopRole } from "../components/ShopRoleContext";
 import {
   FaPlus,
   FaTrash,
@@ -40,19 +41,19 @@ const Settings = () => {
     email: "",
     shop_logo: null,
   });
-
-  const [loading, setLoading] = useState(false);
   const [selectedBranchId, setSelectedBranchId] = useState("");
- 
 
   // Fetch shop data
   useEffect(() => {
     const fetchShop = async () => {
       try {
         const token = localStorage.getItem("token");
-        const res = await axios.get(`${API_BASE}/${canJoinShop?'my-shop/' :'shops/me/'}`, {
-          headers: { Authorization: `Token ${token}` },
-        });
+        const res = await axios.get(
+          `${API_BASE}/${canJoinShop ? "my-shop/" : "shops/me/"}`,
+          {
+            headers: { Authorization: `Token ${token}` },
+          }
+        );
         setShopData(res.data);
       } catch (err) {
         if (err.response?.status === 404) {
@@ -211,11 +212,11 @@ const Settings = () => {
   };
   //check membership
   const [canJoinShop, setCanJoinShop] = useState(true);
-  const token = localStorage.getItem("token")
+  const token = localStorage.getItem("token");
   useEffect(() => {
     const fetchMembershipStatus = async () => {
       try {
-        const token = localStorage.getItem("token")
+        const token = localStorage.getItem("token");
         const res = await axios.get(
           "http://127.0.0.1:8000/api/check-membership/",
           { headers: { Authorization: `Token ${token}` } }
@@ -228,6 +229,10 @@ const Settings = () => {
 
     fetchMembershipStatus();
   }, [token]);
+
+  //check shop role
+  const { shopRole, approveEmployee, loading } = useShopRole();
+  console.log(shopRole);
 
   return (
     <div className="min-h-screen bg-white p-6">
@@ -275,57 +280,92 @@ const Settings = () => {
               <p className="text-gray-500">No shop created yet.</p>
             )}
           </div>
-
-          {/* Create Branch */}
-          {(shopData.owner || !canJoinShop) ? (
+          {/*add category jsx */}
+          {shopData.owner && (
             <div className="bg-white shadow rounded-lg p-6">
               <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                <FaPlus /> Create New Branch
+                <FaPlus /> Add New Category
               </h3>
-              <form onSubmit={addBranch} className="space-y-4">
+              <form onSubmit={handleCategorySubmit} className="space-y-4">
                 <input
                   type="text"
-                  placeholder="Branch Name"
-                  value={newBranch.name}
-                  onChange={(e) =>
-                    setNewBranch({ ...newBranch, name: e.target.value })
-                  }
+                  name="name"
+                  placeholder="Category Name"
+                  value={newCategory.name}
+                  onChange={handleCategoryChange}
                   className="w-full border p-2 rounded"
                 />
-                <input
-                  type="text"
-                  placeholder="Branch Address"
-                  value={newBranch.address}
-                  onChange={(e) =>
-                    setNewBranch({ ...newBranch, address: e.target.value })
-                  }
-                  className="w-full border p-2 rounded"
-                />
-                <input
-                  type="text"
-                  placeholder="Phone"
-                  value={newBranch.phone}
-                  onChange={(e) =>
-                    setNewBranch({ ...newBranch, phone: e.target.value })
-                  }
-                  className="w-full border p-2 rounded"
-                />
-                <input
-                  type="text"
-                  placeholder="Manager Name"
-                  value={newBranch.manager}
-                  onChange={(e) =>
-                    setNewBranch({ ...newBranch, manager: e.target.value })
-                  }
+                <textarea
+                  name="description"
+                  placeholder="Description"
+                  value={newCategory.description}
+                  onChange={handleCategoryChange}
                   className="w-full border p-2 rounded"
                 />
                 <button
                   type="submit"
-                  className="w-full flex items-center justify-center gap-2 bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
+                  className="w-full flex items-center justify-center gap-2 bg-green-600 text-white py-2 rounded hover:bg-green-700"
                 >
-                  <FaSave /> Create Branch
+                  <FaArchive /> Add
                 </button>
               </form>
+            </div>
+          )}
+
+          {/* Create Branch */}
+          {shopData.owner || !canJoinShop ? (
+            <div>
+              {shopRole?.role != "employee" && (
+                <div className="bg-white shadow rounded-lg p-6">
+                  <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                    <FaPlus /> Create New Branch
+                  </h3>
+                  <form onSubmit={addBranch} className="space-y-4">
+                    <input
+                      type="text"
+                      placeholder="Branch Name"
+                      value={newBranch.name}
+                      onChange={(e) =>
+                        setNewBranch({ ...newBranch, name: e.target.value })
+                      }
+                      className="w-full border p-2 rounded"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Branch Address"
+                      value={newBranch.address}
+                      onChange={(e) =>
+                        setNewBranch({ ...newBranch, address: e.target.value })
+                      }
+                      className="w-full border p-2 rounded"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Phone"
+                      value={newBranch.phone}
+                      onChange={(e) =>
+                        setNewBranch({ ...newBranch, phone: e.target.value })
+                      }
+                      className="w-full border p-2 rounded"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Manager Name"
+                      value={newBranch.manager}
+                      onChange={(e) =>
+                        setNewBranch({ ...newBranch, manager: e.target.value })
+                      }
+                      className="w-full border p-2 rounded"
+                    />
+                    <button
+                      type="submit"
+                      className="w-full flex items-center justify-center gap-2 bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
+                    >
+                      <FaSave /> Create Branch
+                    </button>
+                  </form>
+                </div>
+              )}
             </div>
           ) : (
             <div className="bg-white shadow rounded-lg p-6">
@@ -436,102 +476,77 @@ const Settings = () => {
           )}
 
           {/* Branch Management */}
-          <div className="bg-white shadow rounded-lg p-6">
-            <h3 className="text-lg font-semibold mb-4">Branch Management</h3>
-            <table className="w-full text-sm border-collapse">
-              <thead>
-                <tr className="border-b">
-                  <th className="text-left py-2">Branch Name</th>
-                  <th className="text-left py-2">Manager</th>
-                  <th className="text-left py-2">Phone</th>
-                  <th className="text-left py-2">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {branches.map((branch) => (
-                  <tr key={branch.id} className="border-b text-start">
-                    <td className="py-2">
-                      <p className="font-medium">{branch.name}</p>
-                      <p className="text-gray-500 text-xs">{branch.address}</p>
-                    </td>
-                    <td>{branch.manager}</td>
-                    <td>{branch.phone}</td>
-                    <td>
-                      <span
-                        className={`px-2 py-1 text-xs rounded ${
-                          branch.status === "Active"
-                            ? "bg-green-100 text-green-600"
-                            : "bg-red-100 text-red-600"
-                        }`}
-                      >
-                        {branch.status}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          {/*add category jsx */}
-          {shopData.owner && (
+          {shopRole?.role == "owner" && (
             <div className="bg-white shadow rounded-lg p-6">
-              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                <FaPlus /> Add New Category
-              </h3>
-              <form onSubmit={handleCategorySubmit} className="space-y-4">
-                <input
-                  type="text"
-                  name="name"
-                  placeholder="Category Name"
-                  value={newCategory.name}
-                  onChange={handleCategoryChange}
-                  className="w-full border p-2 rounded"
-                />
-                <textarea
-                  name="description"
-                  placeholder="Description"
-                  value={newCategory.description}
-                  onChange={handleCategoryChange}
-                  className="w-full border p-2 rounded"
-                />
-                <button
-                  type="submit"
-                  className="w-full flex items-center justify-center gap-2 bg-green-600 text-white py-2 rounded hover:bg-green-700"
-                >
-                  <FaArchive /> Add
-                </button>
-              </form>
+              <h3 className="text-lg font-semibold mb-4">Branch Management</h3>
+              <table className="w-full text-sm border-collapse">
+                <thead>
+                  <tr className="border-b">
+                    <th className="text-left py-2">Branch Name</th>
+                    <th className="text-left py-2">Manager</th>
+                    <th className="text-left py-2">Phone</th>
+                    <th className="text-left py-2">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {branches.map((branch) => (
+                    <tr key={branch.id} className="border-b text-start">
+                      <td className="py-2">
+                        <p className="font-medium">{branch.name}</p>
+                        <p className="text-gray-500 text-xs">
+                          {branch.address}
+                        </p>
+                      </td>
+                      <td>{branch.manager}</td>
+                      <td>{branch.phone}</td>
+                      <td>
+                        <span
+                          className={`px-2 py-1 text-xs rounded ${
+                            branch.status === "Active"
+                              ? "bg-green-100 text-green-600"
+                              : "bg-red-100 text-red-600"
+                          }`}
+                        >
+                          {branch.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           )}
 
           {/* Delete Branch */}
-          <div className="bg-red-50 border border-red-200 shadow rounded-lg p-6 md:col-span-2">
-            <h3 className="text-lg font-semibold mb-2 text-red-700 flex items-center gap-2">
-              <FaExclamationTriangle /> Delete Branch
-            </h3>
-            <p className="text-sm text-red-600 mb-4">
-              Permanently delete a branch. This action cannot be undone.
-            </p>
-            <select
-              className="w-full border p-2 rounded mb-4"
-              value={selectedBranchId}
-              onChange={(e) => setSelectedBranchId(e.target.value)}
-            >
-              <option value="">Select a branch</option>
-              {branches.map((branch) => (
-                <option key={branch.id} value={branch.id}>
-                  {branch.name}
-                </option>
-              ))}
-            </select>
-            <button
-              disabled={!selectedBranchId}
-              onClick={() => deleteBranch(selectedBranchId)}
-              className="w-full flex items-center justify-center gap-2 bg-red-600 text-white py-2 rounded hover:bg-red-700"
-            >
-              <FaTrash /> Delete Branch
-            </button>
-          </div>
+          {shopRole?.role == "owner" && (
+            <div className="bg-red-50 border border-red-200 shadow rounded-lg p-6 md:col-span-2">
+              <h3 className="text-lg font-semibold mb-2 text-red-700 flex items-center gap-2">
+                <FaExclamationTriangle /> Delete Branch
+              </h3>
+              <p className="text-sm text-red-600 mb-4">
+                Permanently delete a branch. This action cannot be undone.
+              </p>
+              <select
+                className="w-full border p-2 rounded mb-4"
+                value={selectedBranchId}
+                onChange={(e) => setSelectedBranchId(e.target.value)}
+              >
+                <option value="">Select a branch</option>
+                {branches.map((branch) => (
+                  <option key={branch.id} value={branch.id}>
+                    {branch.name}
+                  </option>
+                ))}
+              </select>
+              <button
+                disabled={!selectedBranchId}
+                onClick={() => deleteBranch(selectedBranchId)}
+                className="w-full flex items-center justify-center gap-2 bg-red-600 text-white py-2 rounded hover:bg-red-700"
+              >
+                <FaTrash /> Delete Branch
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

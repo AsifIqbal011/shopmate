@@ -213,8 +213,18 @@ class BranchViewSet(viewsets.ModelViewSet):
     serializer_class = BranchSerializer
 
 class CustomerViewSet(viewsets.ModelViewSet):
-    queryset = Customer.objects.all()
+    queryset = Customer.objects.all().order_by("-created_at")
     serializer_class = CustomerSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        shop = get_user_shop(self.request.user)
+        return Customer.objects.filter(shop=shop)
+
+    def perform_create(self, serializer):
+        shop = get_user_shop(self.request.user)
+        serializer.save(shop=shop)
+
 
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all().order_by("name")
@@ -259,11 +269,11 @@ class SaleItemViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         shop = get_user_shop(self.request.user)
-        return SaleItem.objects.filter(sale__shop=shop)
+        return SaleItem.objects.filter(shop=shop)
 
     def perform_create(self, serializer):
-        # shop is inherited from the linked Sale
-        serializer.save()
+        shop = get_user_shop(self.request.user)
+        serializer.save(shop=shop)
 
 class InvoiceViewSet(viewsets.ModelViewSet):
     queryset = Invoice.objects.all()

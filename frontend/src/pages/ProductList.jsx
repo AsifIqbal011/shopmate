@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { useShopRole } from "../components/ShopRoleContext";
 import { FaSearch, FaEdit, FaTrash, FaSave, FaTimes } from "react-icons/fa";
 
 const ProductList = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [categories, setCategories] = useState([]);
-  
 
+  const { shopRole, approveEmployee, loading } = useShopRole();
   // Edit state
+  console.log(shopRole?.role);
   const [editId, setEditId] = useState(null);
   const [editForm, setEditForm] = useState({
     name: "",
@@ -30,8 +31,6 @@ const ProductList = () => {
         setProducts(res.data);
       } catch (err) {
         console.error("Error fetching products:", err);
-      } finally {
-        setLoading(false);
       }
     };
     fetchProducts();
@@ -57,7 +56,9 @@ const ProductList = () => {
   const filteredProducts = products.filter(
     (product) =>
       product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (product.category?.name || "").toLowerCase().includes(searchTerm.toLowerCase())
+      (product.category?.name || "")
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase())
   );
 
   // Status helpers
@@ -75,13 +76,19 @@ const ProductList = () => {
   // Edit
   const handleEdit = (product) => {
     const categoryId =
-      product?.category?.id !== undefined ? product.category.id : product?.category ?? "";
+      product?.category?.id !== undefined
+        ? product.category.id
+        : product?.category ?? "";
     setEditId(product.id);
     setEditForm({
       name: product.name ?? "",
       category_id: categoryId ?? "",
-      cost_price: product.cost_price !== undefined ? String(product.cost_price) : "",
-      selling_price: product.selling_price !== undefined ? String(product.selling_price) : "",
+      cost_price:
+        product.cost_price !== undefined ? String(product.cost_price) : "",
+      selling_price:
+        product.selling_price !== undefined
+          ? String(product.selling_price)
+          : "",
       quantity: product.quantity !== undefined ? String(product.quantity) : "",
     });
   };
@@ -98,7 +105,8 @@ const ProductList = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this product?")) return;
+    if (!window.confirm("Are you sure you want to delete this product?"))
+      return;
     try {
       const token = localStorage.getItem("token");
       await axios.delete(`http://localhost:8000/api/products/${id}/`, {
@@ -116,9 +124,15 @@ const ProductList = () => {
 
       const payload = {
         name: editForm.name,
-        cost_price: editForm.cost_price ? parseFloat(editForm.cost_price) : undefined,
-        selling_price: editForm.selling_price ? parseFloat(editForm.selling_price) : undefined,
-        quantity: editForm.quantity ? parseInt(editForm.quantity, 10) : undefined,
+        cost_price: editForm.cost_price
+          ? parseFloat(editForm.cost_price)
+          : undefined,
+        selling_price: editForm.selling_price
+          ? parseFloat(editForm.selling_price)
+          : undefined,
+        quantity: editForm.quantity
+          ? parseInt(editForm.quantity, 10)
+          : undefined,
         category: editForm.category_id || null,
       };
 
@@ -129,7 +143,7 @@ const ProductList = () => {
       );
 
       let updatedProduct = res.data;
-      
+
       setProducts((prev) =>
         prev.map((p) => (p.id === id ? { ...p, ...updatedProduct } : p))
       );
@@ -142,7 +156,9 @@ const ProductList = () => {
   return (
     <div className="min-h-screen bg-white p-4 sm:p-6 lg:w-256">
       <h1 className="text-2xl font-bold mb-2">Product List</h1>
-      <p className="text-gray-600 mb-4">Manage your product inventory and pricing.</p>
+      <p className="text-gray-600 mb-4">
+        Manage your product inventory and pricing.
+      </p>
 
       {/* Search */}
       <div className="relative w-full sm:w-1/3 mb-6">
@@ -164,7 +180,10 @@ const ProductList = () => {
           <p className="text-center text-gray-500">No products found.</p>
         ) : (
           filteredProducts.map((product) => (
-            <div key={product.id} className="bg-white rounded-lg shadow p-4 space-y-3">
+            <div
+              key={product.id}
+              className="bg-white rounded-lg shadow p-4 space-y-3"
+            >
               <div className="flex items-start gap-3">
                 {product.image ? (
                   <img
@@ -209,9 +228,9 @@ const ProductList = () => {
                           ))}
                         </select>
                       ) : ( */}
-                        <p className="text-sm text-gray-500">
-                          {product.category?.name}
-                        </p>
+                      <p className="text-sm text-gray-500">
+                        {product.category?.name}
+                      </p>
                       {/* )} */}
                     </div>
 
@@ -258,38 +277,45 @@ const ProductList = () => {
                       className="border rounded p-1 w-20 text-center"
                     />
                   ) : (
-                    <span className="font-medium">৳{product.selling_price}</span>
+                    <span className="font-medium">
+                      ৳{product.selling_price}
+                    </span>
                   )}
                 </div>
-
-                <div>
-                  <span className="text-gray-500">Cost: </span>
-                  {editId === product.id ? (
-                    <input
-                      type="number"
-                      value={editForm.cost_price}
-                      onChange={(e) =>
-                        setEditForm({ ...editForm, cost_price: e.target.value })
-                      }
-                      className="border rounded p-1 w-20 text-center"
-                    />
-                  ) : (
-                    <span className="font-medium">৳{product.cost_price}</span>
-                  )}
-                </div>
-
-                <div>
-                  <span className="text-gray-500">Profit: </span>
-                  <span
-                    className={`font-medium ${
-                      product.selling_price - product.cost_price > 0
-                        ? "text-green-600"
-                        : "text-red-600"
-                    }`}
-                  >
-                    ৳{product.selling_price - product.cost_price}
-                  </span>
-                </div>
+                {shopRole?.role == "owner" && (
+                  <div>
+                    <span className="text-gray-500">Cost: </span>
+                    {editId === product.id ? (
+                      <input
+                        type="number"
+                        value={editForm.cost_price}
+                        onChange={(e) =>
+                          setEditForm({
+                            ...editForm,
+                            cost_price: e.target.value,
+                          })
+                        }
+                        className="border rounded p-1 w-20 text-center"
+                      />
+                    ) : (
+                      <span className="font-medium">৳{product.cost_price}</span>
+                    )}
+                  </div>
+                )}
+                {shopRole?.role == "owner" && (
+                  <div>
+                    <span className="text-gray-500">Profit: </span>
+                    <span
+                      className={`font-medium ${
+                        product.selling_price - product.cost_price > 0
+                          ? "text-green-600"
+                          : "text-red-600"
+                      }`}
+                    >
+                      ৳{product.selling_price - product.cost_price}
+                    </span>
+                  </div>
+                )}
               </div>
 
               <div className="flex gap-2">
@@ -342,8 +368,8 @@ const ProductList = () => {
                 <th className="p-3">Category</th>
                 <th className="p-3 text-center">Units</th>
                 <th className="p-3 text-center">Price</th>
-                <th className="p-3 text-center">Cost</th>
-                <th className="p-3 text-center">Profit</th>
+               {shopRole?.role == 'owner' && ( <th className="p-3 text-center">Cost</th>)}
+               {shopRole?.role == 'owner' && (  <th className="p-3 text-center">Profit</th>)}
                 <th className="p-3 text-center">Status</th>
                 <th className="p-3 text-center">Actions</th>
               </tr>
@@ -398,8 +424,8 @@ const ProductList = () => {
                         ))}
                       </select>
                     ) : ( */}
-                      <span>{product.category?.name || "No category"}</span>
-                 { /*  )} */}
+                    <span>{product.category?.name || "No category"}</span>
+                    {/*  )} */}
                   </td>
 
                   <td className="p-3 text-center">
@@ -423,7 +449,10 @@ const ProductList = () => {
                         type="number"
                         value={editForm.selling_price}
                         onChange={(e) =>
-                          setEditForm({ ...editForm, selling_price: e.target.value })
+                          setEditForm({
+                            ...editForm,
+                            selling_price: e.target.value,
+                          })
                         }
                         className="border rounded p-1 w-20 text-center"
                       />
@@ -431,32 +460,36 @@ const ProductList = () => {
                       `৳${product.selling_price}`
                     )}
                   </td>
-
-                  <td className="p-3 text-center">
-                    {editId === product.id ? (
-                      <input
-                        type="number"
-                        value={editForm.cost_price}
-                        onChange={(e) =>
-                          setEditForm({ ...editForm, cost_price: e.target.value })
-                        }
-                        className="border rounded p-1 w-20 text-center"
-                      />
-                    ) : (
-                      `৳${product.cost_price}`
-                    )}
-                  </td>
-
-                  <td
-                    className={`p-3 text-center font-medium ${
-                      product.selling_price - product.cost_price > 0
-                        ? "text-green-600"
-                        : "text-red-600"
-                    }`}
-                  >
-                    ৳{product.selling_price - product.cost_price}
-                  </td>
-
+                  {shopRole?.role == "owner" && (
+                    <td className="p-3 text-center">
+                      {editId === product.id ? (
+                        <input
+                          type="number"
+                          value={editForm.cost_price}
+                          onChange={(e) =>
+                            setEditForm({
+                              ...editForm,
+                              cost_price: e.target.value,
+                            })
+                          }
+                          className="border rounded p-1 w-20 text-center"
+                        />
+                      ) : (
+                        `৳${product.cost_price}`
+                      )}
+                    </td>
+                  )}
+                  {shopRole?.role == "owner" && (
+                    <td
+                      className={`p-3 text-center font-medium ${
+                        product.selling_price - product.cost_price > 0
+                          ? "text-green-600"
+                          : "text-red-600"
+                      }`}
+                    >
+                      ৳{product.selling_price - product.cost_price}
+                    </td>
+                  )}
                   <td className="p-3 text-center">
                     <span
                       className={`px-2 py-1 rounded text-xs font-medium ${getStatusColor(
@@ -476,7 +509,10 @@ const ProductList = () => {
                         >
                           <FaSave />
                         </button>
-                        <button onClick={handleCancel} className="p-1 text-gray-600">
+                        <button
+                          onClick={handleCancel}
+                          className="p-1 text-gray-600"
+                        >
                           <FaTimes />
                         </button>
                       </div>

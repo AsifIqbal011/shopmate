@@ -86,6 +86,7 @@ class CustomerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Customer
         fields = '__all__'
+        read_only_fields = ["id", "shop", "created_at", "updated_at"]
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
@@ -107,7 +108,7 @@ class SaleItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = SaleItem
         fields = "__all__"
-        read_only_fields = ["id"]
+        read_only_fields = ["id", "sale"]
 
 class SaleSerializer(serializers.ModelSerializer):
     sale_items = SaleItemSerializer(many=True)
