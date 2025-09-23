@@ -10,27 +10,14 @@ import {
   FaUpload,
 } from "react-icons/fa";
 
-const mockBranches = [
-  {
-    id: "1",
-    name: "Main Store",
-    address: "123 Main Street, City, State 12345",
-    phone: "+1 (555) 123-4567",
-    manager: "Anamina",
-    status: "No",
-  },
-];
-
 const API_BASE = "http://localhost:8000/api";
 
 const Settings = () => {
-  const [branches, setBranches] = useState(mockBranches);
+  const [branches, setBranches] = useState([]);
   const [newBranch, setNewBranch] = useState({
-    name: "",
-    address: "",
+    branch_name: "",
+    location: "",
     phone: "",
-    manager: "",
-    status: "Active",
   });
 
   const [shopData, setShopData] = useState({
@@ -73,24 +60,64 @@ const Settings = () => {
     fetchShop();
   }, []);
 
+  // Fetch branch
+  useEffect(() => {
+    const fetchBranches = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await axios.get(`${API_BASE}/branches/`, {
+          headers: { Authorization: `Token ${token}` },
+        });
+        setBranches(res.data);
+      } catch (err) {
+        console.error("Error fetching branches:", err);
+      }
+    };
+    fetchBranches();
+  }, []);
+
   // Add branch
-  const addBranch = (e) => {
+  const addBranch = async (e) => {
     e.preventDefault();
-    if (!newBranch.name) return;
-    setBranches([...branches, { ...newBranch, id: Date.now().toString() }]);
-    setNewBranch({
-      name: "",
-      address: "",
-      phone: "",
-      manager: "",
-      status: "Active",
-    });
+    if (!newBranch.branch_name) return;
+
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.post(
+        `${API_BASE}/branches/`,
+        {
+          branch_name: newBranch.branch_name,
+          location: newBranch.location,
+          phone: newBranch.phone,
+        },
+        { headers: { Authorization: `Token ${token}` } }
+      );
+
+      setBranches([...branches, res.data]); // use response from backend
+      setNewBranch({
+        branch_name: "",
+        location: "",
+        phone: "",
+      });
+    } catch (err) {
+      console.error("Error adding branch:", err.response?.data || err.message);
+      alert("Failed to add branch: " + JSON.stringify(err.response?.data));
+    }
   };
 
-  // Delete branch
-  const deleteBranch = (id) => {
-    setBranches(branches.filter((branch) => branch.id !== id));
-    if (selectedBranchId === id) setSelectedBranchId("");
+  // Delete branch (DELETE API call)
+  const deleteBranch = async (id) => {
+    try {
+      const token = localStorage.getItem("token");
+      await axios.delete(`${API_BASE}/branches/${id}/`, {
+        headers: { Authorization: `Token ${token}` },
+      });
+
+      setBranches(branches.filter((branch) => branch.id !== id));
+      if (selectedBranchId === id) setSelectedBranchId("");
+    } catch (err) {
+      console.error("Error deleting branch:", err);
+    }
   };
 
   // Handle shop form changes
@@ -232,7 +259,6 @@ const Settings = () => {
 
   //check shop role
   const { shopRole, approveEmployee, loading } = useShopRole();
-  console.log(shopRole);
 
   return (
     <div className="min-h-screen bg-white p-6">
@@ -324,18 +350,21 @@ const Settings = () => {
                     <input
                       type="text"
                       placeholder="Branch Name"
-                      value={newBranch.name}
+                      value={newBranch.branch_name}
                       onChange={(e) =>
-                        setNewBranch({ ...newBranch, name: e.target.value })
+                        setNewBranch({
+                          ...newBranch,
+                          branch_name: e.target.value,
+                        })
                       }
                       className="w-full border p-2 rounded"
                     />
                     <input
                       type="text"
-                      placeholder="Branch Address"
-                      value={newBranch.address}
+                      placeholder="Branch Location"
+                      value={newBranch.location}
                       onChange={(e) =>
-                        setNewBranch({ ...newBranch, address: e.target.value })
+                        setNewBranch({ ...newBranch, location: e.target.value })
                       }
                       className="w-full border p-2 rounded"
                     />
@@ -345,15 +374,6 @@ const Settings = () => {
                       value={newBranch.phone}
                       onChange={(e) =>
                         setNewBranch({ ...newBranch, phone: e.target.value })
-                      }
-                      className="w-full border p-2 rounded"
-                    />
-                    <input
-                      type="text"
-                      placeholder="Manager Name"
-                      value={newBranch.manager}
-                      onChange={(e) =>
-                        setNewBranch({ ...newBranch, manager: e.target.value })
                       }
                       className="w-full border p-2 rounded"
                     />
@@ -483,7 +503,6 @@ const Settings = () => {
                 <thead>
                   <tr className="border-b">
                     <th className="text-left py-2">Branch Name</th>
-                    <th className="text-left py-2">Manager</th>
                     <th className="text-left py-2">Phone</th>
                     <th className="text-left py-2">Status</th>
                   </tr>
@@ -492,22 +511,16 @@ const Settings = () => {
                   {branches.map((branch) => (
                     <tr key={branch.id} className="border-b text-start">
                       <td className="py-2">
-                        <p className="font-medium">{branch.name}</p>
+                        <p className="font-medium">{branch.branch_name}</p>
                         <p className="text-gray-500 text-xs">
-                          {branch.address}
+                          {branch.location}
                         </p>
                       </td>
-                      <td>{branch.manager}</td>
                       <td>{branch.phone}</td>
                       <td>
                         <span
-                          className={`px-2 py-1 text-xs rounded ${
-                            branch.status === "Active"
-                              ? "bg-green-100 text-green-600"
-                              : "bg-red-100 text-red-600"
-                          }`}
-                        >
-                          {branch.status}
+                          className={`px-2 py-1 text-xs rounded bg-green-100 text-green-600}`}
+                        >{new Date(branch.created_at).toLocaleDateString("en-GB", {  day: "2-digit", month: "short",year: "numeric", })}
                         </span>
                       </td>
                     </tr>
@@ -527,14 +540,14 @@ const Settings = () => {
                 Permanently delete a branch. This action cannot be undone.
               </p>
               <select
-                className="w-full border p-2 rounded mb-4"
+                className="w-full border p-2 rounded mb-4 text-black"
                 value={selectedBranchId}
                 onChange={(e) => setSelectedBranchId(e.target.value)}
               >
-                <option value="">Select a branch</option>
+                <option  className=" text-black" value="">Select a branch</option>
                 {branches.map((branch) => (
-                  <option key={branch.id} value={branch.id}>
-                    {branch.name}
+                  <option   key={branch.id} value={branch.id}>
+                    {branch.branch_name}
                   </option>
                 ))}
               </select>

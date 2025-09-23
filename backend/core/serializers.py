@@ -81,6 +81,7 @@ class BranchSerializer(serializers.ModelSerializer):
     class Meta:
         model = Branch
         fields = '__all__'
+        read_only_fields = ['id', 'shop']
 
 class CustomerSerializer(serializers.ModelSerializer):
     class Meta:

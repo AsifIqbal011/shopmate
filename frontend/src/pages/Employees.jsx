@@ -1,8 +1,16 @@
 import React, { useState, useEffect } from "react";
-import { FaEdit, FaTrash, FaSearch, FaCheck, FaTimes, FaEnvelope,FaPhone } from "react-icons/fa";
+import {
+  FaEdit,
+  FaTrash,
+  FaSearch,
+  FaCheck,
+  FaTimes,
+  FaEnvelope,
+  FaPhone,
+} from "react-icons/fa";
 import axios from "axios";
 
-const Employees=()=> {
+const Employees = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [branchFilter, setBranchFilter] = useState("all");
   const [employees, setEmployees] = useState([]);
@@ -18,7 +26,7 @@ const Employees=()=> {
         headers: { Authorization: `Token ${token}` },
       });
       setEmployees(res.data);
-
+      console.log(employees);
       // Populate branch options dynamically
       const uniqueBranches = [
         ...new Set(res.data.map((emp) => emp.branch).filter(Boolean)),
@@ -51,7 +59,7 @@ const Employees=()=> {
     try {
       await axios.post(
         `http://127.0.0.1:8000/api/join-requests/${id}/handle/`,
-        { action: "approve" },  
+        { action: "approve" },
         { headers: { Authorization: `Token ${token}` } }
       );
       fetchEmployees();
@@ -65,7 +73,7 @@ const Employees=()=> {
     try {
       await axios.post(
         `http://127.0.0.1:8000/api/join-requests/${id}/handle/`,
-        { action: "reject" }, 
+        { action: "reject" },
         { headers: { Authorization: `Token ${token}` } }
       );
       fetchRequests();
@@ -74,19 +82,31 @@ const Employees=()=> {
     }
   };
 
-  const removeEmployee = async (id) => {
-    if (!window.confirm("Are you sure you want to remove this employee?"))
-      return;
-    try {
-      const token = localStorage.getItem("token");
-      await axios.delete(`http://localhost:8000/api/employee/${id}/`, {
+const removeEmployee = async (id) => {
+  const confirmed = window.confirm("Are you sure you want to remove this employee?");
+  if (!confirmed) return;
+
+  try {
+    const token = localStorage.getItem("token");
+
+    const res = await axios.delete(
+      `http://localhost:8000/api/employees/${id}/`,
+      {
         headers: { Authorization: `Token ${token}` },
-      });
-      setEmployees(employees.filter((p) => p.id !== id));
-    } catch (err) {
-      console.error("Error deleting employee:", err);
+      }
+    );
+
+    if (res.status === 204) {
+      // Filter out the removed employee
+      setEmployees((prev) => prev.filter((emp) => emp.id !== id));
+    } else {
+      console.error("Unexpected response:", res);
     }
-  };
+  } catch (err) {
+    console.error("Error deleting employee:", err.response?.data || err.message);
+  }
+};
+
 
   // Filter employees based on search and branch
   const filtered = employees.filter((e) => {
@@ -141,33 +161,28 @@ const Employees=()=> {
       {/* Employee Table */}
       <div className="overflow-x-auto hidden md:block">
         <table className="min-w-full border text-sm">
-          <thead className="bg-gray-100">
+          <thead className="bg-gray-100 ">
             <tr>
-              <th className="p-2 text-left">Name</th>
-              <th className="p-2 text-left">Email</th>
-              <th className="p-2 text-left">Branch</th>
-              <th className="p-2 text-left">Role</th>
-              <th className="p-2 text-left">Status</th>
-              <th className="p-2 text-left">Sales</th>
-              <th className="p-2 text-left">Join Date</th>
-              <th className="p-2 text-left">Actions</th>
+              <th className="p-2 text-center">Name</th>
+              <th className="p-2 text-center">Email</th>
+              <th className="p-2 text-center">Branch</th>
+              <th className="p-2 text-center">Role</th>
+              <th className="p-2 text-center">Status</th>
+              <th className="p-2 text-center">Sales</th>
+              <th className="p-2 text-center">Join Date</th>
+              <th className="p-2 text-center">Actions</th>
             </tr>
           </thead>
           <tbody>
             {filtered.map((e) => (
               <tr key={e.id} className="border-t hover:bg-gray-50">
-                <td className="p-2 flex items-center gap-2">
+                <td className="p-2 flex items-center justify-start gap-2">
+                  {e?.image &&(
                   <img
-                    src={
-                      e.image
-                        ? typeof e.image === "string"
-                          ? `http://localhost:8000${e.image}`
-                          : e.image.url
-                        : "../public/vite.svg"
-                    }
+                    src={`http://localhost:8000/${e.image}`}
                     alt={e.name}
                     className="w-8 h-8 rounded-full object-cover"
-                  />
+                  />)}
                   {e.name}
                 </td>
                 <td className="p-2">{e.email}</td>
@@ -185,7 +200,9 @@ const Employees=()=> {
                   </span>
                 </td>
                 <td className="p-2 font-medium">{e.sales}</td>
-                <td className="p-2">{e.joinDate}</td>
+                <td className="p-2">
+                  {new Date(e.joinDate).toLocaleDateString("en-GB", {  day: "2-digit", month: "short",year: "numeric", })}
+                </td>
                 <td className="p-2 flex gap-2">
                   <button className="p-1 text-blue-600 hover:text-blue-800">
                     <FaEdit />
@@ -243,7 +260,7 @@ const Employees=()=> {
           <div key={e.id} className="border rounded p-4 shadow-sm">
             <div className="flex items-center gap-3 mb-2">
               <img
-                src={e.profile_pic|| '../public/vite.svg'}
+                src={e.profile_pic || "../public/vite.svg"}
                 alt={e.name}
                 className="w-12 h-12 rounded-full object-cover"
               />
@@ -281,5 +298,5 @@ const Employees=()=> {
       </div>
     </div>
   );
-}
+};
 export default Employees;

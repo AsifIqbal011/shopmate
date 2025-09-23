@@ -89,6 +89,7 @@ class PendingJoinRequestsView(APIView):
                 "user_name": r.user.username,
                 "user_email": r.user.email,
                 "full_name": getattr(r.user.profile, "full_name", ""),
+                "image": getattr(r.user.profile, "image_url", ""),
                 "shop": r.shop.name,
                 "status": r.status,
                 "created_at": r.created_at,
@@ -173,7 +174,7 @@ class EmployeeListView(APIView):
         owner_shops = Shop.objects.filter(owner=request.user)
         employees = ShopMembership.objects.filter(
             shop__in=owner_shops, status="approved"
-        )
+        ).select_related("user", "shop", "branch")
 
         data = [
             {
@@ -182,14 +183,23 @@ class EmployeeListView(APIView):
                 "email": emp.user.email,
                 "role": emp.role,
                 "status": "Active" if emp.status == "approved" else "Pending",
-                "branch": getattr(emp.shop, "name", ""),  # or your branch field
-                "joinDate": getattr(emp, "created_at", ""),
-                "image": getattr(emp.user.profile, "image_url", ""),
-                "sales": 0,  # calculate later if needed
+                "branch": emp.branch.branch_name if emp.branch else "",  # ✅ branch name
+                "joinDate": emp.created_at.strftime("%d %B %Y"),         # nicely formatted date
+                "image": emp.user.profile.profile_pic.url if emp.user.profile.profile_pic else "",
+                "sales": 0,  # placeholder for now
             }
             for emp in employees
         ]
         return Response(data)
+    def delete(self, request, id):
+        try:
+            # Ensure the employee belongs to one of the user's shops
+            owner_shops = Shop.objects.filter(owner=request.user)
+            membership = ShopMembership.objects.get(id=id, shop__in=owner_shops)
+            membership.delete()
+            return Response({"detail": "Employee removed successfully."}, status=204)
+        except ShopMembership.DoesNotExist:
+            return Response({"detail": "Employee not found or not authorized."}, status=404)
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
@@ -211,6 +221,15 @@ def check_membership_status(request):
 class BranchViewSet(viewsets.ModelViewSet):
     queryset = Branch.objects.all()
     serializer_class = BranchSerializer
+    
+    def get_queryset(self):
+        # only return branches of the user's shop
+        user = self.request.user
+        return Branch.objects.filter(shop__owner=user)
+
+    def perform_create(self, serializer):
+        shop = self.request.user.shop_set.first()  # assuming 1 shop per owner
+        serializer.save(shop=shop)
 
 class CustomerViewSet(viewsets.ModelViewSet):
     queryset = Customer.objects.all().order_by("-created_at")
