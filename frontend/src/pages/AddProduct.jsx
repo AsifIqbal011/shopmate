@@ -157,7 +157,7 @@ const AddProduct = () => {
                 </div>
               </div>
 
-              <div className={`grid ${approveEmployee ?'grid-cols-2':'md:grid-cols-3'} gap-4 justify-between`}>
+              <div className={`grid ${approveEmployee ?'grid-cols-2':'grid-cols-3'} gap-4 justify-between`}>
                 {!approveEmployee && (
                   <div>
                     <label className="block text-sm font-medium">

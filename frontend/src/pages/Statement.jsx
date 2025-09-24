@@ -16,14 +16,16 @@ export default function Statement() {
       });
       const data = await res.json();
 
+      console.log(data);
+
       // Map backend data
       const mapped = data.map((sale) => ({
         id: sale.id,
         customer:
-          sale.customer?.full_name || sale.customer?.username || "Walk-in Customer",
+          sale.customer?.full_name || sale.customer || "Walk-in Customer",
         amount: sale.total_amount,
         soldBy: sale.employee?.username || "Unknown",
-        branch: sale.shop?.name || "N/A",
+        branch: sale.branch?.name || "N/A",
         date: new Date(sale.created_at).toLocaleDateString(),
       }));
 

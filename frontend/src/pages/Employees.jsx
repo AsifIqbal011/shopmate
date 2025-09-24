@@ -254,13 +254,13 @@ const removeEmployee = async (id) => {
           </ul>
         )}
       </div>
-
+      {/* mobile */}
       <div className="grid gap-4 md:hidden">
         {filtered.map((e) => (
           <div key={e.id} className="border rounded p-4 shadow-sm">
             <div className="flex items-center gap-3 mb-2">
               <img
-                src={e.profile_pic || "../public/vite.svg"}
+                src={`http://localhost:8000/${e.image}`} 
                 alt={e.name}
                 className="w-12 h-12 rounded-full object-cover"
               />
