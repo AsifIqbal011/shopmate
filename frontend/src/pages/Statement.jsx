@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { FaArrowLeft } from "react-icons/fa";
 import { Link } from "react-router-dom";
+import axios from "axios";
 
 export default function Statement() {
   const [invoices, setInvoices] = useState([]);
@@ -9,23 +10,23 @@ export default function Statement() {
   const token = localStorage.getItem("token"); // backend token
 
   // Fetch sales from backend
+useEffect(() => {
   const fetchInvoices = async () => {
     try {
-      const res = await fetch("http://localhost:8000/api/sales/", {
+      const token = localStorage.getItem("token");
+      const res = await axios.get("http://localhost:8000/api/sales/", {
         headers: { Authorization: `Token ${token}` },
       });
-      const data = await res.json();
 
-      console.log(data);
+      // If paginated, data will be inside res.data.results
+      const salesData = Array.isArray(res.data) ? res.data : res.data.results || [];
 
-      // Map backend data
-      const mapped = data.map((sale) => ({
+      const mapped = salesData.map((sale) => ({
         id: sale.id,
-        customer:
-          sale.customer?.full_name || sale.customer || "Walk-in Customer",
+        customer: sale.customer_name || "Walk-in Customer",
         amount: sale.total_amount,
-        soldBy: sale.employee?.username || "Unknown",
-        branch: sale.branch?.name || "N/A",
+        soldBy: sale.employee_username || "Unknown",
+        branch: sale.branch_name || "N/A",
         date: new Date(sale.created_at).toLocaleDateString(),
       }));
 
@@ -35,9 +36,9 @@ export default function Statement() {
     }
   };
 
-  useEffect(() => {
-    fetchInvoices();
-  }, []);
+  fetchInvoices();
+}, []);
+
 
   const filteredInvoices = useMemo(() => {
     let data = [...invoices];
@@ -70,7 +71,9 @@ export default function Statement() {
           <FaArrowLeft />
         </Link>
         <div className="m-auto">
-          <h1 className="text-3xl font-bold text-center mb-2">Sales Statement</h1>
+          <h1 className="text-3xl font-bold text-center mb-2">
+            Sales Statement
+          </h1>
           <p className="text-gray-500 text-center">
             Manage and review all customer invoices
           </p>

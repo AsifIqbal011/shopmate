@@ -114,9 +114,14 @@ class SaleItemSerializer(serializers.ModelSerializer):
 class SaleSerializer(serializers.ModelSerializer):
     sale_items = SaleItemSerializer(many=True)
 
+    # extra read-only fields for related names
+    customer_name = serializers.CharField(source="customer.full_name", read_only=True)
+    branch_name = serializers.CharField(source="branch.branch_name", read_only=True)
+    employee_username = serializers.CharField(source="employee.username", read_only=True)
+
     class Meta:
         model = Sale
-        fields = "__all__"
+        fields = "__all__"  # still returns all fields (ids + extra names)
         read_only_fields = ["id", "shop", "employee", "created_at"]
 
     def create(self, validated_data):
@@ -125,7 +130,7 @@ class SaleSerializer(serializers.ModelSerializer):
         for item_data in items_data:
             SaleItem.objects.create(sale=sale, **item_data)
         return sale
-    
+
     def update(self, instance, validated_data):
         items_data = validated_data.pop("sale_items", None)
 
@@ -141,6 +146,7 @@ class SaleSerializer(serializers.ModelSerializer):
                 SaleItem.objects.create(sale=instance, **item_data)
 
         return instance
+
 
 
 class InvoiceSerializer(serializers.ModelSerializer):
