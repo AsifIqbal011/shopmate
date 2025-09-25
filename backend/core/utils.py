@@ -1,12 +1,15 @@
 from .models import *
 
-def get_user_shop(user):
+def get_user_shop_and_branch(user):
+    # Owner → no branch restriction
     shop = Shop.objects.filter(owner=user).first()
-    if shop:
-        return shop
+    branch = None
 
-    membership = ShopMembership.objects.filter(user=user, status="approved").first()
-    if membership:
-        return membership.shop
+    if not shop:
+        membership = ShopMembership.objects.filter(user=user, status="approved").select_related("branch", "shop").first()
+        if membership:
+            shop = membership.shop
+            branch = membership.branch
 
-    return None
+    return shop, branch
+

@@ -20,19 +20,20 @@ from .views import (
     HandleJoinRequestView,
     EmployeeListView,
     check_membership_status,
-    my_shop
+    my_shop,
+    shop_branches
 )
 
 router = DefaultRouter()
 router.register(r'profiles', ProfileViewSet)
 router.register(r'shops', ShopViewSet, basename='shop')
 router.register(r'branches', BranchViewSet, basename='branch')
-router.register(r'customers', CustomerViewSet)
-router.register(r'categories', CategoryViewSet)
-router.register(r'products', ProductViewSet)
-router.register(r'sales', SaleViewSet)
-router.register(r'sale-items', SaleItemViewSet)
-router.register(r'invoices', InvoiceViewSet)
+router.register(r'customers', CustomerViewSet,basename='customer')
+router.register(r'categories', CategoryViewSet, basename='category')
+router.register(r'products', ProductViewSet,basename='product')
+router.register(r'sales', SaleViewSet,basename='sale')
+router.register(r'sale-items', SaleItemViewSet, basename='saleitem')
+router.register(r'invoices', InvoiceViewSet,basename='invoice')
 router.register(r'expenses', ExpenseViewSet, basename='expense') 
 router.register(r'shopmembership', ShopMembershipViewSet,basename='shopmembership')
 
@@ -47,6 +48,6 @@ urlpatterns = [
     path("api/join-requests/<uuid:request_id>/handle/", HandleJoinRequestView.as_view(), name="handle-join-request"),
     path("api/employees/", EmployeeListView.as_view(), name="employees"),
     path("api/employees/<uuid:id>/", EmployeeListView.as_view(), name="employee-detail"),
-    path("api/check-membership/",check_membership_status,name="check-membership-status"
-),
+    path("api/check-membership/",check_membership_status,name="check-membership-status"),
+    path("api/shop-branches/", shop_branches, name="shop-branches"),
 ]

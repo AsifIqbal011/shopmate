@@ -78,6 +78,7 @@ class ShopMembership(models.Model):
 class Customer(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     shop = models.ForeignKey(Shop, on_delete=models.CASCADE)
+    branch = models.ForeignKey(Branch, null=True, blank=True, on_delete=models.CASCADE)  
     full_name = models.CharField(max_length=100)
     phone = models.CharField(max_length=20, blank=True, null=True)
     email = models.EmailField(blank=True, null=True)
@@ -92,6 +93,7 @@ class Category(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=100)
     shop = models.ForeignKey(Shop, on_delete=models.CASCADE,blank=True, null=True)
+    branch = models.ForeignKey(Branch, null=True, blank=True, on_delete=models.CASCADE)    
     description = models.TextField(blank=True, null=True)  # optional description
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -100,11 +102,14 @@ class Category(models.Model):
         ordering = ["name"]
 
     def __str__(self):
+        if self.branch:
+            return f"{self.name} ({self.branch.branch_name}->({self.shop.name}))"
         return f"{self.name} ({self.shop.name})"
 
 class Product(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     shop = models.ForeignKey("Shop", on_delete=models.CASCADE, related_name="products")
+    branch = models.ForeignKey(Branch, null=True, blank=True, on_delete=models.CASCADE)  
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True, related_name="products")
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True, null=True) 
@@ -125,7 +130,7 @@ class Sale(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     shop = models.ForeignKey(Shop, on_delete=models.CASCADE)
     employee = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
-    customer = models.ForeignKey(Customer, on_delete=models.SET_NULL, null=True, blank=True)
+    customer = models.ForeignKey(Customer, on_delete=models.SET_NULL, null=True, blank=True) 
     branch = models.ForeignKey(Branch, on_delete=models.SET_NULL, null=True, blank=True)
     total_amount = models.DecimalField(max_digits=10, decimal_places=2)
     profit_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)

@@ -5,7 +5,7 @@ from django.http import HttpResponse
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
-from .utils import get_user_shop
+from .utils import get_user_shop_and_branch
 from rest_framework.decorators import api_view,action,permission_classes
 from django.db.models import Q
 
@@ -104,20 +104,29 @@ class HandleJoinRequestView(APIView):
 
     def post(self, request, request_id):
         action = request.data.get("action")  # "approve" or "reject"
+        branch_id = request.data.get("branch_id")
 
         try:
             membership = ShopMembership.objects.get(id=request_id, status="pending")
         except ShopMembership.DoesNotExist:
             return Response({"error": "Request not found"}, status=404)
 
-        # Ensure only shop owner can act
         if membership.shop.owner != request.user:
             return Response({"error": "Not authorized"}, status=403)
 
         if action == "approve":
+            if not branch_id:
+                return Response({"error": "Branch ID required to approve"}, status=400)
+
+            try:
+                branch = Branch.objects.get(id=branch_id, shop=membership.shop)
+            except Branch.DoesNotExist:
+                return Response({"error": "Invalid branch for this shop"}, status=400)
+
             membership.status = "approved"
+            membership.branch = branch
             membership.save()
-            return Response({"success": "Request approved and employee added."})
+            return Response({"success": f"Request approved. Employee assigned to {branch.branch_name}."})
 
         elif action == "reject":
             membership.status = "rejected"
@@ -170,11 +179,34 @@ class EmployeeListView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        # get shops owned by this user
+        # If the user is an owner → show all employees of their shop(s)
         owner_shops = Shop.objects.filter(owner=request.user)
-        employees = ShopMembership.objects.filter(
-            shop__in=owner_shops, status="approved"
-        ).select_related("user", "shop", "branch")
+
+        if owner_shops.exists():
+            employees = ShopMembership.objects.filter(
+                shop__in=owner_shops, status="approved"
+            ).select_related("user", "shop", "branch")
+        else:
+            # If the user is an employee → restrict to their branch only
+            membership = ShopMembership.objects.filter(
+                user=request.user, status="approved"
+            ).select_related("branch", "shop").first()
+
+            if not membership:
+                return Response({"detail": "Not authorized"}, status=403)
+
+            if membership.branch:
+                employees = ShopMembership.objects.filter(
+                    branch=membership.branch, status="approved"
+                ).select_related("user", "shop", "branch")
+            else:
+                # fallback: no branch assigned → see nobody
+                employees = ShopMembership.objects.none()
+
+        # Optional filter by branch_id from query params
+        branch_id = request.GET.get("branch")
+        if branch_id:
+            employees = employees.filter(branch_id=branch_id)
 
         data = [
             {
@@ -183,17 +215,20 @@ class EmployeeListView(APIView):
                 "email": emp.user.email,
                 "role": emp.role,
                 "status": "Active" if emp.status == "approved" else "Pending",
-                "branch": emp.branch.branch_name if emp.branch else "",  # ✅ branch name
-                "joinDate": emp.created_at.strftime("%d %B %Y"),         # nicely formatted date
-                "image": emp.user.profile.profile_pic.url if emp.user.profile.profile_pic else "",
+                "branch": emp.branch.branch_name if emp.branch else "Unassigned",
+                "branch_id": str(emp.branch.id) if emp.branch else None,
+                "shop": emp.shop.name,
+                "joinDate": emp.created_at.strftime("%d %B %Y"),
+                "image": emp.user.profile.profile_pic.url if getattr(emp.user.profile, "profile_pic", None) else "",
                 "sales": 0,  # placeholder for now
             }
             for emp in employees
         ]
         return Response(data)
+
+
     def delete(self, request, id):
         try:
-            # Ensure the employee belongs to one of the user's shops
             owner_shops = Shop.objects.filter(owner=request.user)
             membership = ShopMembership.objects.get(id=id, shop__in=owner_shops)
             membership.delete()
@@ -231,68 +266,110 @@ class BranchViewSet(viewsets.ModelViewSet):
         shop = self.request.user.shop_set.first()  # assuming 1 shop per owner
         serializer.save(shop=shop)
 
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def shop_branches(request):
+    shop_id = request.GET.get("shop_id")
+    if not shop_id:
+        return Response({"error": "Shop ID is required"}, status=400)
+    branches = Branch.objects.filter(shop__id=shop_id)
+    data = [{"id": str(b.id), "name": b.branch_name} for b in branches]
+    return Response(data)
+
 class CustomerViewSet(viewsets.ModelViewSet):
-    queryset = Customer.objects.all().order_by("-created_at")
     serializer_class = CustomerSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        shop = get_user_shop(self.request.user)
-        return Customer.objects.filter(shop=shop)
+        shop, branch = get_user_shop_and_branch(self.request.user)
+        if not shop:
+            return Customer.objects.none()
+
+        qs = Customer.objects.filter(shop=shop)
+        if branch:
+            qs = qs.filter(branch=branch)
+        return qs
 
     def perform_create(self, serializer):
-        shop = get_user_shop(self.request.user)
-        serializer.save(shop=shop)
+        shop, branch = get_user_shop_and_branch(self.request.user)
+        serializer.save(shop=shop, branch=branch)
 
 
 class CategoryViewSet(viewsets.ModelViewSet):
-    queryset = Category.objects.all().order_by("name")
     serializer_class = CategorySerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        shop = get_user_shop(self.request.user)
-        return Category.objects.filter(shop=shop)
+        shop, branch = get_user_shop_and_branch(self.request.user)
+        if not shop:
+            return Category.objects.none()
+
+        qs = Category.objects.filter(shop=shop)
+        if branch:
+            qs = qs.filter(branch=branch)
+        return qs
+
+    def perform_create(self, serializer):
+        shop, branch = get_user_shop_and_branch(self.request.user)
+        serializer.save(shop=shop, branch=branch)
 
 class ProductViewSet(viewsets.ModelViewSet):
-    queryset = Product.objects.all().order_by("-created_at")
     serializer_class = ProductSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        shop = get_user_shop(self.request.user)
-        return Product.objects.filter(shop=shop)
+        shop, branch = get_user_shop_and_branch(self.request.user)
+        if not shop:
+            return Product.objects.none()
+
+        qs = Product.objects.filter(shop=shop)
+
+        if branch:
+            qs = qs.filter(branch=branch)
+
+        return qs
 
     def perform_create(self, serializer):
-        shop = get_user_shop(self.request.user)
-        serializer.save(shop=shop)
+        shop, branch = get_user_shop_and_branch(self.request.user)
+        serializer.save(shop=shop, branch=branch)
+
 
 class SaleViewSet(viewsets.ModelViewSet):
-    queryset = Sale.objects.all().order_by("-created_at") 
     serializer_class = SaleSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        shop = get_user_shop(self.request.user)
-        return Sale.objects.filter(shop=shop)
+        shop, branch = get_user_shop_and_branch(self.request.user)
+        if not shop:
+            return Sale.objects.none()
+
+        qs = Sale.objects.filter(shop=shop)
+        if branch:
+            qs = qs.filter(branch=branch)
+        return qs
 
     def perform_create(self, serializer):
-        shop = get_user_shop(self.request.user)
-        serializer.save(shop=shop, employee=self.request.user)
+        shop, branch = get_user_shop_and_branch(self.request.user)
+        serializer.save(shop=shop, branch=branch, employee=self.request.user)
 
 
 class SaleItemViewSet(viewsets.ModelViewSet):
-    queryset = SaleItem.objects.all()
     serializer_class = SaleItemSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        shop = get_user_shop(self.request.user)
-        return SaleItem.objects.filter(shop=shop)
+        shop, branch = get_user_shop_and_branch(self.request.user)
+        if not shop:
+            return SaleItem.objects.none()
+
+        qs = SaleItem.objects.filter(shop=shop)
+        if branch:
+            qs = qs.filter(branch=branch)
+        return qs
 
     def perform_create(self, serializer):
-        shop = get_user_shop(self.request.user)
-        serializer.save(shop=shop)
+        shop, branch = get_user_shop_and_branch(self.request.user)
+        serializer.save(shop=shop, branch=branch)
 
 class InvoiceViewSet(viewsets.ModelViewSet):
     queryset = Invoice.objects.all()
@@ -303,20 +380,24 @@ class ExpenseViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        shop = get_user_shop(self.request.user)
+        shop, branch = get_user_shop_and_branch(self.request.user)
         if not shop:
             return Expense.objects.none()
-        return Expense.objects.filter(shop=shop).order_by('-date', '-created_at')
+
+        qs = Expense.objects.filter(shop=shop).order_by('-date', '-created_at')
+        if branch:
+            qs = qs.filter(branch=branch)
+        return qs
 
     def perform_create(self, serializer):
-        shop = get_user_shop(self.request.user)
-        serializer.save(shop=shop)
+        shop, branch = get_user_shop_and_branch(self.request.user)
+        serializer.save(shop=shop, branch=branch)
 
 class ReportSummary(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
-        shop = get_user_shop(request.user)
+        shop, branch = get_user_shop_and_branch(request.user)
         if not shop:
             return Response({"detail": "No shop found"}, status=status.HTTP_404_NOT_FOUND)
 
@@ -331,8 +412,12 @@ class ReportSummary(APIView):
         else:
             start_date = now().date() - timedelta(days=30)
 
-        sales = Sale.objects.filter(shop=shop, created_at_date_gte=start_date)
+        sales = Sale.objects.filter(shop=shop, created_at__date__gte=start_date)
         expenses = Expense.objects.filter(shop=shop, date__gte=start_date)
+
+        if branch:
+            sales = sales.filter(branch=branch)
+            expenses = expenses.filter(branch=branch)
 
         total_revenue = sales.aggregate(total=Sum("total_amount"))["total"] or 0
         total_profit = sales.aggregate(total=Sum("profit_amount"))["total"] or 0

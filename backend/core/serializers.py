@@ -62,11 +62,15 @@ class ShopMembershipSerializer(serializers.ModelSerializer):
     shop_id = serializers.PrimaryKeyRelatedField(  # accept shop id when creating
         queryset=Shop.objects.all(), source="shop", write_only=True
     )
+    branch = serializers.StringRelatedField(read_only=True)
+    branch_id = serializers.PrimaryKeyRelatedField(
+        queryset=Branch.objects.all(), source="branch", write_only=True, required=False
+    )
     user = serializers.StringRelatedField(read_only=True)
 
     class Meta:
         model = ShopMembership
-        fields = ['id', 'user', 'shop', 'shop_id', 'role', 'status', 'created_at']
+        fields = ['id', 'user', 'shop', 'shop_id','branch', 'branch_id', 'role', 'status', 'created_at']
         read_only_fields = ['id', 'user', 'role', 'status', 'created_at']
 
     def create(self, validated_data):

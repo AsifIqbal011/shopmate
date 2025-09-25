@@ -16,6 +16,7 @@ const Employees = () => {
   const [employees, setEmployees] = useState([]);
   const [requests, setRequests] = useState([]);
   const [branches, setBranches] = useState([]);
+  const [selectedBranches, setSelectedBranches] = useState({}); // per-request branch select
 
   const token = localStorage.getItem("token");
 
@@ -26,12 +27,6 @@ const Employees = () => {
         headers: { Authorization: `Token ${token}` },
       });
       setEmployees(res.data);
-      console.log(employees);
-      // Populate branch options dynamically
-      const uniqueBranches = [
-        ...new Set(res.data.map((emp) => emp.branch).filter(Boolean)),
-      ];
-      setBranches(uniqueBranches);
     } catch (err) {
       console.error("Error fetching employees:", err);
     }
@@ -49,25 +44,48 @@ const Employees = () => {
     }
   };
 
+  // Fetch shop branches
+  const fetchBranches = async () => {
+    try {
+      const shopRes = await axios.get("http://127.0.0.1:8000/api/my-shop/", {
+        headers: { Authorization: `Token ${token}` },
+      });
+      const shopId = shopRes.data.id;
+
+      const branchRes = await axios.get(
+        `http://127.0.0.1:8000/api/shop-branches/?shop_id=${shopId}`,
+        { headers: { Authorization: `Token ${token}` } }
+      );
+      setBranches(branchRes.data); // [{id, branch_name}, ...]
+    } catch (err) {
+      console.error("Error fetching branches:", err);
+    }
+  };
+
   useEffect(() => {
     fetchEmployees();
     fetchRequests();
+    fetchBranches();
   }, []);
 
   // Approve request
-  const handleApprove = async (id) => {
-    try {
-      await axios.post(
-        `http://127.0.0.1:8000/api/join-requests/${id}/handle/`,
-        { action: "approve" },
-        { headers: { Authorization: `Token ${token}` } }
-      );
-      fetchEmployees();
-      fetchRequests();
-    } catch (err) {
-      console.error("Error approving request:", err);
-    }
-  };
+  const handleApprove = async (reqId) => {
+  try {
+    const branchId = selectedBranches[reqId] || null;
+    console.log("Approving:", { reqId, branchId });
+
+    await axios.post(
+      `http://127.0.0.1:8000/api/join-requests/${reqId}/handle/`,
+      { action: "approve", branch_id: branchId},
+      { headers: { Authorization: `Token ${token}`, "Content-Type": "application/json", } }
+    );
+    fetchEmployees();
+    fetchRequests();
+  } catch (err) {
+    console.error("Error approving request:", err.response?.data || err.message);
+  }
+};
+
 
   const handleReject = async (id) => {
     try {
@@ -82,38 +100,43 @@ const Employees = () => {
     }
   };
 
-const removeEmployee = async (id) => {
-  const confirmed = window.confirm("Are you sure you want to remove this employee?");
-  if (!confirmed) return;
-
-  try {
-    const token = localStorage.getItem("token");
-
-    const res = await axios.delete(
-      `http://localhost:8000/api/employees/${id}/`,
-      {
-        headers: { Authorization: `Token ${token}` },
-      }
+  const removeEmployee = async (id) => {
+    const confirmed = window.confirm(
+      "Are you sure you want to remove this employee?"
     );
+    if (!confirmed) return;
 
-    if (res.status === 204) {
-      // Filter out the removed employee
-      setEmployees((prev) => prev.filter((emp) => emp.id !== id));
-    } else {
-      console.error("Unexpected response:", res);
+    try {
+      const res = await axios.delete(
+        `http://localhost:8000/api/employees/${id}/`,
+        { headers: { Authorization: `Token ${token}` } }
+      );
+
+      if (res.status === 204) {
+        setEmployees((prev) => prev.filter((emp) => emp.id !== id));
+      } else {
+        console.error("Unexpected response:", res);
+      }
+    } catch (err) {
+      console.error(
+        "Error deleting employee:",
+        err.response?.data || err.message
+      );
     }
-  } catch (err) {
-    console.error("Error deleting employee:", err.response?.data || err.message);
-  }
-};
+  };
 
-
-  // Filter employees based on search and branch
+  // Filter employees
   const filtered = employees.filter((e) => {
     const matchesSearch =
       e.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       e.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesBranch = branchFilter === "all" || e.branch === branchFilter;
+
+    // if employee.branch is an object {id, branch_name}
+    const empBranchId = typeof e.branch === "object" ? e.branch.id : e.branch;
+
+    const matchesBranch =
+      branchFilter === "all" || empBranchId === branchFilter;
+
     return matchesSearch && matchesBranch;
   });
 
@@ -148,8 +171,8 @@ const removeEmployee = async (id) => {
           >
             <option value="all">All Branches</option>
             {branches.map((b) => (
-              <option key={b} value={b}>
-                {b}
+              <option key={b.id} value={b.id}>
+                {b.name}
               </option>
             ))}
           </select>
@@ -178,11 +201,11 @@ const removeEmployee = async (id) => {
               <tr key={e.id} className="border-t hover:bg-gray-50">
                 <td className="p-2 flex items-center justify-start gap-2">
                   {e?.image &&(
-                  <img
-                    src={`http://localhost:8000/${e.image}`}
-                    alt={e.name}
-                    className="w-8 h-8 rounded-full object-cover"
-                  />)}
+                    <img
+                      src={`http://localhost:8000/${e.image}`}
+                      alt={e.name}
+                      className="w-8 h-8 rounded-full object-cover"
+                    />)}
                   {e.name}
                 </td>
                 <td className="p-2">{e.email}</td>
@@ -235,7 +258,25 @@ const removeEmployee = async (id) => {
                   <p className="font-medium">{req.user_name}</p>
                   <p className="text-sm text-gray-500">{req.user_email}</p>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 items-center">
+                  <select
+                    value={selectedBranches[req.id] || ""}
+                    onChange={(e) =>
+                      setSelectedBranches((prev) => ({
+                        ...prev,
+                        [req.id]: e.target.value, // keep as string
+                      }))
+                    }
+                    className="border rounded px-2 py-1"
+                  >
+                    <option value="">Select Branch</option>
+                    {branches.map((b) => (
+                      <option key={b.id} value={b.id}>
+                        {b.name}
+                      </option>
+                    ))}
+                  </select>
+
                   <button
                     onClick={() => handleApprove(req.id)}
                     className="px-3 py-1 bg-green-600 text-white rounded flex items-center gap-1"
