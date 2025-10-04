@@ -346,6 +346,10 @@ class SaleViewSet(viewsets.ModelViewSet):
         qs = Sale.objects.filter(shop=shop)
         if branch:
             qs = qs.filter(branch=branch)
+        
+        status_param = self.request.query_params.get("status")
+        if status_param:
+            qs = qs.filter(status=status_param.lower())
         return qs
 
     def perform_create(self, serializer):

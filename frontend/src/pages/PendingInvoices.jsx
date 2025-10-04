@@ -1,48 +1,45 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { FaArrowLeft } from "react-icons/fa";
 import { Link } from "react-router-dom";
+import axios from "axios";
 
 export default function PendingInvoices() {
-  const [invoices, setInvoices] = useState([
-    {
-      id: 1,
-      customer: "Pollo",
-      amount: 6000,
-      soldBy: "Hanji",
-      branch: "Uttora",
-      date: "2025-08-20",
-      status: "Pending",
-    },
-    {
-      id: 2,
-      customer: "Mr. Rahman",
-      amount: 7800,
-      soldBy: "Erwin",
-      branch: "Farmgate",
-      date: "2025-08-19",
-      status: "Processing",
-    },
-    {
-      id: 3,
-      customer: "Karim",
-      amount: 69500,
-      soldBy: "Flok",
-      branch: "Mirpur",
-      date: "2025-08-18",
-      status: "Pending",
-    },
-  ]);
-
+  const [invoices, setInvoices] = useState([]);
   const [filter, setFilter] = useState("All");
   const [search, setSearch] = useState("");
-  const [sortBy, setSortBy] = useState(""); // "date" or "branch"
+  const [sortBy, setSortBy] = useState("");
   const [selectedRow, setSelectedRow] = useState(null);
 
-  const markComplete = (id) => {
-    setInvoices((prev) =>
-      prev.map((inv) => (inv.id === id ? { ...inv, status: "Completed" } : inv))
-    );
-  };
+  useEffect(() => {
+    const fetchInvoices = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await axios.get("http://localhost:8000/api/sales/?status=pending", {
+          headers: { Authorization: `Token ${token}` },
+        });
+
+        const salesData = Array.isArray(res.data)
+          ? res.data
+          : res.data.results || [];
+
+        const mapped = salesData.map((sale) => ({
+          id: sale.id,
+          customer: sale.customer_name || "Walk-in Customer",
+          amount: parseFloat(sale.total_amount),
+          soldBy: sale.employee_username || "Unknown",
+          branch: sale.branch_name || "N/A",
+          date: new Date(sale.created_at).toLocaleDateString(),
+          status: sale.status || "Pending",
+        }));
+
+        setInvoices(mapped);
+      } catch (err) {
+        console.error("Error fetching sales:", err);
+      }
+    };
+
+    fetchInvoices();
+  }, []);
 
   const filteredInvoices = useMemo(() => {
     let data = invoices.filter((inv) => {
@@ -54,11 +51,9 @@ export default function PendingInvoices() {
     });
 
     if (sortBy === "date") {
-      data = data
-        .slice()
-        .sort(
-          (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-        );
+      data = data.slice().sort(
+        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+      );
     } else if (sortBy === "branch") {
       data = data.slice().sort((a, b) => a.branch.localeCompare(b.branch));
     }
@@ -68,10 +63,7 @@ export default function PendingInvoices() {
   return (
     <div className="p-6 space-y-6 lg:w-256">
       <div className="flex items-center gap-3 mb-10">
-        <Link
-          to="/reports"
-          className="p-2 text-black hover:text-blue-700 rounded"
-        >
+        <Link to="/reports" className="p-2 text-black hover:text-blue-700 rounded">
           <FaArrowLeft />
         </Link>
         <div className="m-auto">
@@ -83,6 +75,7 @@ export default function PendingInvoices() {
           </p>
         </div>
       </div>
+
       {/* Filters */}
       <div className="flex flex-col md:flex-row md:items-center gap-3">
         <select
@@ -121,19 +114,13 @@ export default function PendingInvoices() {
         <table className="w-full">
           <thead>
             <tr className="bg-gray-100 text-gray-700">
-              <th className="border-x-gray-400 px-3 py-2 text-left">
-                Customer
-              </th>
-              <th className="border-x-gray-400 px-3 py-2 text-right">Amount</th>
-              <th className="border-x-gray-400 px-3 py-2 text-left">Sold by</th>
-              <th className="border-x-gray-400 px-3 py-2 text-left">Branch</th>
-              <th className="border-x-gray-400 px-3 py-2 text-center">Date</th>
-              <th className="border-x-gray-400 px-3 py-2 text-center">
-                Status
-              </th>
-              <th className="border-x-gray-400 px-3 py-2 text-center">
-                Action
-              </th>
+              <th className="px-3 py-2 text-left">Customer</th>
+              <th className="px-3 py-2 text-right">Amount</th>
+              <th className="px-3 py-2 text-left">Sold by</th>
+              <th className="px-3 py-2 text-left">Branch</th>
+              <th className="px-3 py-2 text-center">Date</th>
+              <th className="px-3 py-2 text-center">Status</th>
+              <th className="px-3 py-2 text-center">Action</th>
             </tr>
           </thead>
           <tbody>
@@ -146,8 +133,8 @@ export default function PendingInvoices() {
                 }`}
               >
                 <td className="px-3 py-2">{inv.customer}</td>
-                <td className="px-3 py-2 text-center">
-                  ৳{inv.amount.toLocaleString()}
+                <td className="px-3 py-2 text-right">
+                  ৳{Number(inv.amount).toLocaleString()}
                 </td>
                 <td className="px-3 py-2">{inv.soldBy}</td>
                 <td className="px-3 py-2">{inv.branch}</td>
@@ -155,9 +142,9 @@ export default function PendingInvoices() {
                 <td className="px-3 py-2 text-center">
                   <span
                     className={`px-2 py-1 text-xs ${
-                      inv.status === "Pending"
+                      inv.status === "pending"
                         ? "bg-yellow-100 text-yellow-800"
-                        : inv.status === "Processing"
+                        : inv.status === "processing"
                         ? "bg-blue-100 text-blue-800"
                         : "bg-green-100 text-green-800"
                     }`}
@@ -165,10 +152,10 @@ export default function PendingInvoices() {
                     {inv.status}
                   </span>
                 </td>
-                <td className=" px-3 py-2 text-center">
-                  {inv.status !== "Completed" ? (
+                <td className="px-3 py-2 text-center">
+                  {inv.status !== "completed" ? (
                     <Link
-                      to="/create-invoice"
+                      to={`/create-invoice/${inv.id}`}
                       className="bg-orange-600 rounded-md text-white px-3 py-1.5 hover:text-gray-800 text-sm"
                     >
                       Confirm
@@ -189,6 +176,6 @@ export default function PendingInvoices() {
           </tbody>
         </table>
       </div>
-    </div>
-  );
+    </div>
+  );
 }

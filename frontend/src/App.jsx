@@ -43,7 +43,7 @@ function App() {
           <Route path="add-product" element={<AddProduct />} />
           <Route path="edit-product/:id" element={<EditProduct />} />
           <Route path="create-sale" element={<CreateSale />} />
-          <Route path="create-invoice" element={<CreateInvoice />} />
+          <Route path="create-invoice/:saleId" element={<CreateInvoice />} />
           <Route path="reports" element={<Reports />} />
           <Route path="employees" element={<Employees />} />
           <Route path="settings" element={<Settings />} />

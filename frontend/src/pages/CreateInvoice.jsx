@@ -1,15 +1,19 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FaArrowLeft, FaPlus, FaMinus, FaTrash } from "react-icons/fa";
-import { Link } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
+import axios from "axios";
 
 const CreateInvoice = () => {
+  const { saleId } = useParams();
   const [customerInfo, setCustomerInfo] = useState({
     name: "",
     phone: "",
     email: "",
     address: "",
   });
-
+  const [rows, setRows] = useState([]);
+  const [loading, setLoading] = useState(true);
+  // ---------------- Column Definitions ----------------
   const [columns, setColumns] = useState([
     { id: "product", name: "Product", type: "text", isCustom: false },
     { id: "unit", name: "Unit", type: "number", isCustom: false },
@@ -22,50 +26,64 @@ const CreateInvoice = () => {
     { id: "cost", name: "Cost", type: "number", isCustom: false },
   ]);
 
-  const [rows, setRows] = useState([
-    { id: "1", product: "click fan", unit: 2, sellingPrice: 3000, cost: 2800 },
-    { id: "2", product: "light bulb", unit: 2, sellingPrice: 600, cost: 500 },
-    { id: "3", product: "table fan", unit: 1, sellingPrice: 1500, cost: 1200 },
-  ]);
-
   const [showAddField, setShowAddField] = useState(false);
   const [newColumnName, setNewColumnName] = useState("");
   const [isPercentage, setIsPercentage] = useState(false);
 
-  const calculateModifiedSellingPrice = (row) => {
-    let sellingPrice = Number(row.sellingPrice) || 0;
+  // ---------------- Fetch Sale Details ----------------
+  useEffect(() => {
+    const fetchSaleDetails = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await axios.get(
+          `http://localhost:8000/api/sales/${saleId}/`,
+          {
+            headers: { Authorization: `Token ${token}` },
+          }
+        );
 
-    columns.forEach((column) => {
-      if (
-        column.operation &&
-        row[column.id] !== undefined &&
-        row[column.id] !== ""
-      ) {
-        const fieldValue = Number(row[column.id]) || 0;
+        const sale = res.data;
 
-        if (column.isPercentage) {
-          const percentageAmount = (sellingPrice * fieldValue) / 100;
-          sellingPrice =
-            column.operation === "add"
-              ? sellingPrice + percentageAmount
-              : sellingPrice - percentageAmount;
-        } else {
-          sellingPrice =
-            column.operation === "add"
-              ? sellingPrice + fieldValue
-              : sellingPrice - fieldValue;
-        }
+        // Map customer
+        setCustomerInfo({
+          name: sale.customer_name || "Walk-in Customer",
+          phone: sale.customer?.phone || "",
+          email: sale.customer?.email || "",
+          address: sale.customer?.address || "",
+        });
+        console.log(sale.sale_items);
+        // Map sale items
+        const mappedItems = (sale.sale_items || []).map((item) => ({
+          id: item.id,
+          product: item.product,
+          unit: item.quantity,
+          sellingPrice: parseFloat(item.unit_price),
+          cost: parseFloat(item.unit_cost),
+        }));
+        setRows(mappedItems);
+      } catch (err) {
+        console.error("Error fetching sale details:", err);
+      } finally {
+        setLoading(false);
       }
-    });
+    };
 
-    return sellingPrice;
-  };
+    fetchSaleDetails();
+  }, [saleId]);
+  console.log(customerInfo)
+  console.log(rows)
+  if (loading) return <div className="p-6">Loading...</div>;
 
-  const calculateProfit = (row) => {
-    const modifiedSellingPrice = calculateModifiedSellingPrice(row);
-    const cost = Number(row.cost) || 0;
-    const unit = Number(row.unit) || 1;
-    return ((modifiedSellingPrice - cost) * unit).toFixed(2);
+  
+
+  // ---------------- Helpers ----------------
+  const getColumnHeader = (column) => {
+    let headerText = column.name;
+    if (column.operation) {
+      const symbol = column.operation === "add" ? "+" : "-";
+      headerText += ` (${symbol}${column.isPercentage ? "%" : ""})`;
+    }
+    return headerText;
   };
 
   const addColumn = (operation) => {
@@ -94,8 +112,8 @@ const CreateInvoice = () => {
       sellingPrice: "",
       cost: "",
     };
-    columns.forEach((column) => {
-      if (column.isCustom) newRow[column.id] = "";
+    columns.forEach((col) => {
+      if (col.isCustom) newRow[col.id] = "";
     });
     setRows([...rows, newRow]);
   };
@@ -117,13 +135,40 @@ const CreateInvoice = () => {
     );
   };
 
-  const getColumnHeader = (column) => {
-    let headerText = column.name;
-    if (column.operation) {
-      const symbol = column.operation === "add" ? "+" : "-";
-      headerText += ` (${symbol}${column.isPercentage ? "%" : ""})`;
-    }
-    return headerText;
+  // ---------------- Calculations ----------------
+  const calculateModifiedSellingPrice = (row) => {
+    let sellingPrice = Number(row.sellingPrice) || 0;
+
+    columns.forEach((column) => {
+      if (
+        column.operation &&
+        row[column.id] !== undefined &&
+        row[column.id] !== ""
+      ) {
+        const fieldValue = Number(row[column.id]) || 0;
+        if (column.isPercentage) {
+          const percentageAmount = (sellingPrice * fieldValue) / 100;
+          sellingPrice =
+            column.operation === "add"
+              ? sellingPrice + percentageAmount
+              : sellingPrice - percentageAmount;
+        } else {
+          sellingPrice =
+            column.operation === "add"
+              ? sellingPrice + fieldValue
+              : sellingPrice - fieldValue;
+        }
+      }
+    });
+
+    return sellingPrice;
+  };
+
+  const calculateProfit = (row) => {
+    const modifiedSellingPrice = calculateModifiedSellingPrice(row);
+    const cost = Number(row.cost) || 0;
+    const unit = Number(row.unit) || 1;
+    return ((modifiedSellingPrice - cost) * unit).toFixed(2);
   };
 
   const calculateTotals = () => {
