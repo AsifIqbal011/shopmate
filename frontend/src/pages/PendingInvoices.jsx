@@ -27,7 +27,7 @@ export default function PendingInvoices() {
           customer: sale.customer_name || "Walk-in Customer",
           amount: parseFloat(sale.total_amount),
           soldBy: sale.employee_username || "Unknown",
-          branch: sale.branch_name || "N/A",
+          branch: sale.branch_name || "Main",
           date: new Date(sale.created_at).toLocaleDateString(),
           status: sale.status || "Pending",
         }));
@@ -78,16 +78,6 @@ export default function PendingInvoices() {
 
       {/* Filters */}
       <div className="flex flex-col md:flex-row md:items-center gap-3">
-        <select
-          value={filter}
-          onChange={(e) => setFilter(e.target.value)}
-          className="border p-2"
-        >
-          <option value="All">All Status</option>
-          <option value="Pending">Pending</option>
-          <option value="Processing">Processing</option>
-          <option value="Completed">Completed</option>
-        </select>
 
         <input
           type="text"

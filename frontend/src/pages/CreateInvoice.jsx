@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { FaArrowLeft, FaPlus, FaMinus, FaTrash } from "react-icons/fa";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link,useNavigate } from "react-router-dom";
 import axios from "axios";
 
+
+
 const CreateInvoice = () => {
+  const navigate = useNavigate();
   const { saleId } = useParams();
   const [customerInfo, setCustomerInfo] = useState({
     name: "",
@@ -17,12 +20,7 @@ const CreateInvoice = () => {
   const [columns, setColumns] = useState([
     { id: "product", name: "Product", type: "text", isCustom: false },
     { id: "unit", name: "Unit", type: "number", isCustom: false },
-    {
-      id: "sellingPrice",
-      name: "Selling Price",
-      type: "number",
-      isCustom: false,
-    },
+    { id: "sellingPrice",name: "Selling Price",type: "number",isCustom: false },
     { id: "cost", name: "Cost", type: "number", isCustom: false },
   ]);
 
@@ -55,10 +53,10 @@ const CreateInvoice = () => {
         // Map sale items
         const mappedItems = (sale.sale_items || []).map((item) => ({
           id: item.id,
-          product: item.product,
+          product: item.product.name,
           unit: item.quantity,
           sellingPrice: parseFloat(item.unit_price),
-          cost: parseFloat(item.unit_cost),
+          cost: parseFloat(item.product.cost_price),
         }));
         setRows(mappedItems);
       } catch (err) {
@@ -188,17 +186,21 @@ const CreateInvoice = () => {
 
   const { subtotal, tax, total, totalProfit } = calculateTotals();
 
-  const handleCreateInvoice = () => {
-    alert("Invoice created successfully!");
-    console.log("Invoice:", {
-      customerInfo,
-      rows,
-      subtotal,
-      tax,
-      total,
-      totalProfit,
-    });
-  };
+  const handleCreateInvoice = async () => {
+  try {
+    const token = localStorage.getItem("token");
+    await axios.post(
+      `http://localhost:8000/api/sales/${saleId}/confirm/`,
+      {},
+      { headers: { Authorization: `Token ${token}` } }
+    );
+    alert("Invoice confirmed and sale marked complete!");
+    navigate("/pending-invoices");
+  } catch (err) {
+    console.error("Error confirming invoice:", err.response?.data || err);
+    alert("Failed to confirm invoice: " + JSON.stringify(err.response?.data));
+  }
+};
 
   return (
     <div className="w-full min-h-screen bg-white p-6 space-y-6">
@@ -391,10 +393,7 @@ const CreateInvoice = () => {
               onClick={handleCreateInvoice}
               className="flex-1 bg-blue-600 text-white py-2 rounded"
             >
-              Create Invoice
-            </button>
-            <button className="flex-1 border py-2 rounded">
-              Save as Draft
+              Confirm Invoice
             </button>
           </div>
         </div>

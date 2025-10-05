@@ -441,9 +441,6 @@ const handleCompleteSale = async () => {
             >
               Complete Sale
             </button>
-            <button className="w-full py-2 border rounded">
-              Save as Draft
-            </button>
           </div>
         </div>
       </div>

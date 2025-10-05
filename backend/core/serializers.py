@@ -110,12 +110,14 @@ class ProductSerializer(serializers.ModelSerializer):
         read_only_fields = ['shop'] 
 
 class SaleItemSerializer(serializers.ModelSerializer):
+    product = ProductSerializer(read_only=True) 
     class Meta:
         model = SaleItem
         fields = "__all__"
         read_only_fields = ["id", "sale"]
 
 class SaleSerializer(serializers.ModelSerializer):
+    customer = CustomerSerializer(read_only=True)
     sale_items = SaleItemSerializer(many=True)
 
     # extra read-only fields for related names

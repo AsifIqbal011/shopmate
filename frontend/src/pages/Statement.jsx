@@ -26,7 +26,8 @@ useEffect(() => {
         customer: sale.customer_name || "Walk-in Customer",
         amount: sale.total_amount,
         soldBy: sale.employee_username || "Unknown",
-        branch: sale.branch_name || "N/A",
+        branch: sale.branch_name || "Main",
+        status: sale.status,
         date: new Date(sale.created_at).toLocaleDateString(),
       }));
 
@@ -106,10 +107,11 @@ useEffect(() => {
         <table className="w-full border-collapse border border-gray-300">
           <thead>
             <tr className="bg-gray-100 text-gray-700">
-              <th className="px-4 py-2 text-left border">Customer</th>
-              <th className="px-4 py-2 text-right border">Amount</th>
-              <th className="px-4 py-2 text-left border">Sold by</th>
-              <th className="px-4 py-2 text-left border">Branch</th>
+              <th className="px-4 py-2 text-center border">Customer</th>
+              <th className="px-4 py-2 text-center border">Amount</th>
+              <th className="px-4 py-2 text-center border">Sold by</th>
+              <th className="px-4 py-2 text-center border">Branch</th>
+              <th className="px-3 py-2 text-center border">Status</th>
               <th className="px-4 py-2 text-center border">Date</th>
             </tr>
           </thead>
@@ -119,12 +121,25 @@ useEffect(() => {
                 key={inv.id}
                 className="transition-all duration-300 ease-in-out hover:bg-blue-50 hover:shadow-md"
               >
-                <td className="px-4 py-2 border">{inv.customer}</td>
-                <td className="px-4 py-2 text-right border">
+                <td className="px-4 py-2 text-center border">{inv.customer}</td>
+                <td className="px-4 py-2 text-center border">
                   ৳{inv.amount.toLocaleString()}
                 </td>
                 <td className="px-4 py-2 border">{inv.soldBy}</td>
                 <td className="px-4 py-2 border">{inv.branch}</td>
+                <td className="px-3 py-2 text-center border">
+                  <span
+                    className={`px-2 py-1 text-sm ${
+                      inv.status === "pending"
+                        ? "bg-yellow-100 text-yellow-800"
+                        : inv.status === "processing"
+                        ? "bg-blue-100 text-blue-800"
+                        : "bg-green-100 text-green-800"
+                    }`}
+                  >
+                    {inv.status}
+                  </span>
+                </td>
                 <td className="px-4 py-2 text-center border">{inv.date}</td>
               </tr>
             ))}

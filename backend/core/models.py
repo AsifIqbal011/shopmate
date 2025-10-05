@@ -144,7 +144,7 @@ class Sale(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"Sale {self.invoice_number} - {self.shop.name}"
+        return f"Sale {self.invoice_number} - {self.shop.name} ({self.status})"
 
 class SaleItem(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)

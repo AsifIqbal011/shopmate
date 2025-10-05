@@ -354,8 +354,25 @@ class SaleViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         shop, branch = get_user_shop_and_branch(self.request.user)
-        serializer.save(shop=shop, branch=branch, employee=self.request.user)
 
+        with transaction.atomic():
+            sale = serializer.save(shop=shop, branch=branch, employee=self.request.user)
+
+            for item in sale.sale_items.all():
+                product = item.product
+                if product.quantity < item.quantity:
+                     raise serializers.ValidationError(
+                       {"error": f"Not enough stock for {product.name}. Available: {product.quantity}"}
+                    )
+                product.quantity -= item.quantity
+                product.save() 
+                
+    @action(detail=True, methods=["post"])
+    def confirm(self, request, pk=None):
+        sale = self.get_object()
+        sale.status = "complete"
+        sale.save()
+        return Response({"status": "success", "message": "Sale confirmed"})
 
 class SaleItemViewSet(viewsets.ModelViewSet):
     serializer_class = SaleItemSerializer
