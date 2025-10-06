@@ -110,13 +110,20 @@ class ProductSerializer(serializers.ModelSerializer):
         read_only_fields = ['shop'] 
 
 class SaleItemSerializer(serializers.ModelSerializer):
-    product = ProductSerializer(read_only=True) 
+    product_id = serializers.PrimaryKeyRelatedField(
+        queryset=Product.objects.all(), source="product"
+    )
+    product = ProductSerializer(read_only=True)
     class Meta:
         model = SaleItem
         fields = "__all__"
         read_only_fields = ["id", "sale"]
 
 class SaleSerializer(serializers.ModelSerializer):
+    customer_id = serializers.PrimaryKeyRelatedField(
+        queryset=Customer.objects.all(),
+        source="customer"
+    )
     customer = CustomerSerializer(read_only=True)
     sale_items = SaleItemSerializer(many=True)
 
@@ -143,6 +150,7 @@ class SaleSerializer(serializers.ModelSerializer):
         # update sale fields
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
+            
         instance.save()
 
         if items_data is not None:

@@ -189,18 +189,27 @@ const CreateInvoice = () => {
   const handleCreateInvoice = async () => {
   try {
     const token = localStorage.getItem("token");
+    const totals = calculateTotals();
+
+    const payload = {
+      total_amount: totals.total,
+      profit_amount: totals.totalProfit,
+    };
+
     await axios.post(
       `http://localhost:8000/api/sales/${saleId}/confirm/`,
-      {},
+      payload,
       { headers: { Authorization: `Token ${token}` } }
     );
-    alert("Invoice confirmed and sale marked complete!");
+
+    alert("Invoice confirmed and sale updated successfully!");
     navigate("/pending-invoices");
   } catch (err) {
     console.error("Error confirming invoice:", err.response?.data || err);
     alert("Failed to confirm invoice: " + JSON.stringify(err.response?.data));
   }
 };
+
 
   return (
     <div className="w-full min-h-screen bg-white p-6 space-y-6">

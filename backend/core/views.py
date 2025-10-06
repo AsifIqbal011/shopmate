@@ -370,9 +370,28 @@ class SaleViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["post"])
     def confirm(self, request, pk=None):
         sale = self.get_object()
-        sale.status = "complete"
+        total_amount = request.data.get("total_amount")
+        profit_amount = request.data.get("profit_amount")
+
+        # Validate data
+        if total_amount is None or profit_amount is None:
+            return Response(
+                {"error": "Both total_amount and profit_amount are required."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Save the updated data
+        sale.total_amount = total_amount
+        sale.profit_amount = profit_amount
+        sale.status = "completed"
         sale.save()
-        return Response({"status": "success", "message": "Sale confirmed"})
+
+        return Response({
+            "status": "success",
+            "message": "Sale confirmed and totals updated",
+            "total_amount": sale.total_amount,
+            "profit_amount": sale.profit_amount
+        }, status=status.HTTP_200_OK)
 
 class SaleItemViewSet(viewsets.ModelViewSet):
     serializer_class = SaleItemSerializer

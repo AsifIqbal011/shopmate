@@ -123,12 +123,12 @@ const handleCompleteSale = async () => {
 
     // Step 2: Save sale + items in ONE request
     const payload = {
-      customer: customerId,
+      customer_id: customerId,
       total_amount: total,
       profit_amount: 0,
       invoice_number: `INV-${Date.now()}`,
       sale_items: items.map((item) => ({
-         product: item.product_id,
+         product_id: item.product_id,
          quantity: item.quantity,
          unit_price: item.price,
          unit_cost: item.cost_price || 0,

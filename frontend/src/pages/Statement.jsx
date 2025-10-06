@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { FaArrowLeft } from "react-icons/fa";
-import { Link } from "react-router-dom";
+import { Link,useNavigate } from "react-router-dom";
 import axios from "axios";
 
 export default function Statement() {
@@ -8,6 +8,7 @@ export default function Statement() {
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState("");
   const token = localStorage.getItem("token"); // backend token
+  const navigate = useNavigate();
 
   // Fetch sales from backend
 useEffect(() => {
@@ -118,6 +119,7 @@ useEffect(() => {
           <tbody>
             {filteredInvoices.map((inv) => (
               <tr
+                onClick={() => navigate(`/sales/${inv.id}`)}
                 key={inv.id}
                 className="transition-all duration-300 ease-in-out hover:bg-blue-50 hover:shadow-md"
               >

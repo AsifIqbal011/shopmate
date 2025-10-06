@@ -24,6 +24,7 @@ import Logout from "./components/Logout";
 import Expense from "./pages/Expense";
 import Statement from "./pages/Statement";
 import Profile from "./pages/Profile";
+import SaleDetails from "./pages/SaleDetails";
 
 function App() {
   return (
@@ -49,6 +50,7 @@ function App() {
           <Route path="settings" element={<Settings />} />
           <Route path="pending-invoices" element={<PendingInvoices />} />
           <Route path="statement" element={<Statement />} />
+          <Route path="/sales/:id" element={<SaleDetails />} />
           <Route path="logout" element={<Logout />} />
           <Route path="expenses" element={<Expense />} />
           <Route path="profile" element={<Profile />} />
