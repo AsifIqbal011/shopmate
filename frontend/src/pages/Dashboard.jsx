@@ -1,8 +1,9 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   FaArrowUp,
   FaArrowDown,
-  FaCartPlus
+  FaCartPlus,
+  FaDollarSign,
 } from "react-icons/fa";
 import {
   BarChart,
@@ -15,30 +16,61 @@ import {
   LineChart,
   Line,
 } from "recharts";
+import axios from "axios";
 
-const revenueData = [
-  { month: "Jan", revenue: 12000, expense: 8000 },
-  { month: "Feb", revenue: 15000, expense: 9000 },
-  { month: "Mar", revenue: 18000, expense: 10000 },
-  { month: "Apr", revenue: 20000, expense: 11000 },
-  { month: "May", revenue: 22000, expense: 12000 },
-  { month: "Jun", revenue: 24500, expense: 8200 },
-];
+const API_BASE = "http://localhost:8000/api";
 
-const salesData = [
-  { day: "Mon", sales: 45 },
-  { day: "Tue", sales: 52 },
-  { day: "Wed", sales: 38 },
-  { day: "Thu", sales: 65 },
-  { day: "Fri", sales: 78 },
-  { day: "Sat", sales: 82 },
-  { day: "Sun", sales: 68 },
-];
+const Dashboard = ({ isMobile }) => {
+  const [reportData, setReportData] = useState([]);
+  const [totals, setTotals] = useState({
+    revenue: 0,
+    expense: 0,
+    profit: 0,
+    sales: 0,
+  });
+  const [loading, setLoading] = useState(true);
 
-  const totalRevenue = revenueData.reduce((sum, d) => sum + d.revenue, 0);
-  const totalExpense = revenueData.reduce((sum, d) => sum + d.expense, 0);
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      setLoading(true);
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          console.error("No token found");
+          setLoading(false);
+          return;
+        }
 
- const Dashboard=({ isMobile })=> {
+        const res = await axios.get(`${API_BASE}/reports/summary/?timeframe=30days`, {
+          headers: {
+            Authorization: `Token ${token}`,
+          },
+        });
+
+        const data = res.data;
+        setReportData(data.chart_data || []);
+        setTotals({
+          revenue: data.total_revenue || 0,
+          expense: data.total_expense || 0,
+          profit: data.total_profit || 0,
+          sales: data.total_sales || 0,
+        });
+      } catch (err) {
+        console.error("Error fetching dashboard data:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="p-6 text-center text-gray-500">Loading dashboard...</div>
+    );
+  }
+
   return (
     <div className="p-4 md:p-6 space-y-6 lg:w-256">
       {/* Header */}
@@ -48,107 +80,106 @@ const salesData = [
           Welcome back! Here's what's happening with your business today.
         </p>
       </header>
-       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {/* Revenue */}
-              <div className="bg-white shadow rounded-lg p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-500">Total Revenue</p>
-                    <p className="text-2xl font-bold">
-                      ৳{totalRevenue.toLocaleString()}
-                    </p>
-                  </div>
-                  <FaArrowUp className="h-8 w-8 text-green-500" />
-                </div>
-              </div>
-              {/* Expense */}
-              <div className="bg-white shadow rounded-lg p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-500">Total Expenses</p>
-                    <p className="text-2xl font-bold">
-                      ৳{totalExpense.toLocaleString()}
-                    </p>
-                  </div>
-                  <FaArrowDown className="h-8 w-8 text-red-500" />
-                </div>
-              </div>
-             
-              {/* Sales count (example: can be from backend) */}
-              <div className="bg-white shadow rounded-lg p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-500">Total Sales</p>
-                    <p className="text-2xl font-bold">{revenueData.length * 5}</p>
-                  </div>
-                  <div className="h-8 w-8 bg-blue-100 rounded-full flex items-center justify-center">
-                    <span className="text-blue-600 font-bold"><FaCartPlus /></span>
-                  </div>
-                </div>
-              </div>
+
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* Revenue */}
+        <div className="bg-white shadow rounded-lg p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-500">Total Revenue</p>
+              <p className="text-2xl font-bold">
+                ৳{totals.revenue.toLocaleString()}
+              </p>
             </div>
+            <FaArrowUp className="h-8 w-8 text-green-500" />
+          </div>
+        </div>
+
+        {/* Expense */}
+        <div className="bg-white shadow rounded-lg p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-500">Total Expenses</p>
+              <p className="text-2xl font-bold">
+                ৳{totals.expense.toLocaleString()}
+              </p>
+            </div>
+            <FaArrowDown className="h-8 w-8 text-red-500" />
+          </div>
+        </div>
+
+
+
+        {/* Total Sales */}
+        <div className="bg-white shadow rounded-lg p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-500">Total Sales</p>
+              <p className="text-2xl font-bold">{totals.sales}</p>
+            </div>
+            <div className="h-8 w-8 bg-blue-100 rounded-full flex items-center justify-center">
+              <span className="text-blue-600 font-bold">
+                <FaCartPlus />
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Charts */}
       <div
         className={`grid gap-6 ${
           isMobile ? "grid-cols-1" : "grid-cols-1 lg:grid-cols-2"
         }`}
       >
-        {/* Revenue vs Expenses */}
+        {/* Revenue vs Expense Bar Chart */}
         <div className="bg-white rounded-xl shadow p-4">
           <h2 className="text-lg font-semibold mb-1">Revenue vs Expenses</h2>
           <p className="text-sm text-gray-500 mb-4">
-            Monthly comparison for the last 6 months
+            Monthly comparison for the selected timeframe
           </p>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={revenueData}>
+              <BarChart data={reportData}>
                 <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
                 <XAxis dataKey="month" tick={{ fontSize: 12 }} axisLine={false} />
                 <YAxis
                   tick={{ fontSize: 12 }}
                   axisLine={false}
-                  tickFormatter={(v) => `$${v / 1000}k`}
+                  tickFormatter={(v) => `৳${v / 1000}k`}
                 />
                 <Tooltip
-                  formatter={(v) => [`$${v.toLocaleString()}`, ""]}
-                  labelStyle={{ color: "#111827" }}
-                  contentStyle={{
-                    backgroundColor: "white",
-                    border: "1px solid #e5e7eb",
-                    borderRadius: "8px",
-                    boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
-                  }}
+                  formatter={(v, name) => [
+                    `৳${v.toLocaleString()}`,
+                    name === "revenue" ? "Revenue" : "Expense",
+                  ]}
                 />
                 <Bar dataKey="revenue" fill="#2563EB" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="expense" fill="#ef4444" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="expense" fill="#EF4444" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </div>
 
-        {/* Weekly Sales Trend */}
+        {/* Weekly Trend (using same data for now) */}
         <div className="bg-white rounded-xl shadow p-4">
-          <h2 className="text-lg font-semibold mb-1">Weekly Sales Trend</h2>
-          <p className="text-sm text-gray-500 mb-4">Daily sales for this week</p>
+          <h2 className="text-lg font-semibold mb-1">Performance Trend</h2>
+          <p className="text-sm text-gray-500 mb-4">
+            Monthly revenue trend
+          </p>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={salesData}>
+              <LineChart data={reportData}>
                 <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                <XAxis dataKey="day" tick={{ fontSize: 12 }} axisLine={false} />
+                <XAxis dataKey="month" tick={{ fontSize: 12 }} axisLine={false} />
                 <YAxis tick={{ fontSize: 12 }} axisLine={false} />
                 <Tooltip
-                  formatter={(v) => [`${v} sales`, ""]}
-                  labelStyle={{ color: "#111827" }}
-                  contentStyle={{
-                    backgroundColor: "white",
-                    border: "1px solid #e5e7eb",
-                    borderRadius: "8px",
-                    boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
-                  }}
+                  formatter={(v) => [`৳${v.toLocaleString()}`, "Revenue"]}
                 />
                 <Line
                   type="monotone"
-                  dataKey="sales"
+                  dataKey="revenue"
                   stroke="#10B981"
                   strokeWidth={3}
                   dot={{ fill: "#10B981", strokeWidth: 2, r: 4 }}
@@ -159,54 +190,11 @@ const salesData = [
           </div>
         </div>
       </div>
-<div className="bg-white rounded-xl shadow p-4">
-  <h2 className="text-lg font-semibold mb-4">Recent Activity</h2>
-  <div className="space-y-4">
-    {[
-      {
-        action: "New sale created",
-        item: "iPhone 14 Pro",
-        amount: "$999",
-        time: "2 minutes ago",
-      },
-      {
-        action: "Product added",
-        item: "Samsung Galaxy S24",
-        amount: "$849",
-        time: "15 minutes ago",
-      },
-      {
-        action: "Inventory updated",
-        item: "MacBook Air M2",
-        amount: "+5 units",
-        time: "1 hour ago",
-      },
-      {
-        action: "Employee added",
-        item: "John Smith",
-        amount: "Sales Rep",
-        time: "2 hours ago",
-      },
-    ].map((activity, idx) => (
-      <div
-        key={idx}
-        className="flex justify-between items-start py-2 border-b last:border-0"
-      >
-        {/* Left side: force left alignment */}
-        <div className="flex flex-col text-left">
-          <p className="font-medium text-sm">{activity.action}</p>
-          <p className="text-sm text-gray-500">{activity.item}</p>
-        </div>
-        <div className="text-right">
-          <p className="font-medium text-sm">{activity.amount}</p>
-          <p className="text-xs text-gray-400">{activity.time}</p>
-        </div>
-      </div>
-    ))}
-  </div>
-</div>
+
+    
 
     </div>
   );
-}
+};
+
 export default Dashboard;

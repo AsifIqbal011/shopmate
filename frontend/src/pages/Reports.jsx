@@ -19,39 +19,63 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import axios from "axios";
-import CreateInvoice from "./CreateInvoice";
 import { Link } from "react-router-dom";
 
 const API_BASE = "http://localhost:8000/api";
+
 const Reports = ({ isMobile, onPageChange }) => {
   const [selectedTimeframe, setSelectedTimeframe] = useState("12months");
-  const [reportData, setReportData] = useState([
-    { month: "Jan", revenue: 12000, expense: 8000 },
-    { month: "Feb", revenue: 18000, expense: 12000 },
-    { month: "Mar", revenue: 20000, expense: 15000 },
-    { month: "Apr", revenue: 25000, expense: 18000 },
-    { month: "May", revenue: 30000, expense: 20000 },
-    { month: "Jun", revenue: 35000, expense: 22000 },
-  ]);
+  const [reportData, setReportData] = useState([]);
+  const [totals, setTotals] = useState({
+    revenue: 0,
+    expense: 0,
+    profit: 0,
+    sales:0,
+  });
+  const [loading, setLoading] = useState(false);
 
   // Fetch data from backend
-  // useEffect(() => {
-  //   const fetchData = async () => {
-  //     try {
-  //       const res = await axios.get(
-  //         (`${API_BASE}/reports/?timeframe=${selectedTimeframe}`)
-  //       );
-  //       setReportData(res.data);
-  //     } catch (err) {
-  //       console.error("Error fetching report data:", err);
-  //     }
-  //   };
-  //   fetchData();
-  // }, [selectedTimeframe]);
+useEffect(() => {
+  const fetchReport = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        console.error("No token found in localStorage");
+        setLoading(false);
+        return;
+      }
 
-  const totalRevenue = reportData.reduce((sum, d) => sum + d.revenue, 0);
-  const totalExpense = reportData.reduce((sum, d) => sum + d.expense, 0);
-  const totalProfit = totalRevenue - totalExpense;
+      const res = await axios.get(
+        `${API_BASE}/reports/summary/?timeframe=${selectedTimeframe}`,
+        {
+          headers: {
+            Authorization: `Token ${token}`, 
+          },
+        }
+      );
+
+      const data = res.data;
+      setReportData(data.chart_data || []);
+      setTotals({
+        revenue: data.total_revenue || 0,
+        expense: data.total_expense || 0,
+        profit: data.total_profit || 0,
+        sales: data.total_sales || 0,
+      });
+    } catch (err) {
+      console.error("Error fetching report data:", err);
+      if (err.response?.status === 401) {
+        alert("Session expired or unauthorized. Please log in again.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchReport();
+}, [selectedTimeframe]);
+
 
   const handleExportReport = () => {
     alert("Report exported successfully!");
@@ -61,16 +85,16 @@ const Reports = ({ isMobile, onPageChange }) => {
     <div className="flex gap-2 mb-6 flex-wrap">
       <Link
         onClick={() => onPageChange?.("pending-invoice")}
-        className="px-3 py-2 text-sm rounded-full bg-yellow-500 decoration-0 border hover:bg-gray-50 text-white flex items-center gap-1"
+        className="px-3 py-2 text-sm rounded-full bg-yellow-500 border hover:bg-gray-50 text-white flex items-center gap-1"
         to="/pending-invoices"
       >
         <FaFileInvoice /> Invoice Pending
       </Link>
-        <Link
-          to="/expenses"
-          className="px-3 py-2 text-sm rounded-full bg-red-600 border hover:bg-gray-50 text-white flex items-center gap-1"
-        >
-          <FaPlus /> Add Expenses
+      <Link
+        to="/expenses"
+        className="px-3 py-2 text-sm rounded-full bg-red-600 border hover:bg-gray-50 text-white flex items-center gap-1"
+      >
+        <FaPlus /> Add Expenses
       </Link>
       <Link
         className="px-3 py-2 text-sm rounded-full bg-purple-600 border hover:bg-gray-50 text-white flex items-center gap-1"
@@ -91,42 +115,45 @@ const Reports = ({ isMobile, onPageChange }) => {
             <div>
               <p className="text-sm text-gray-500">Total Revenue</p>
               <p className="text-2xl font-bold">
-                ৳{totalRevenue.toLocaleString()}
+                ৳{totals.revenue.toLocaleString()}
               </p>
             </div>
             <FaArrowUp className="h-8 w-8 text-green-500" />
           </div>
         </div>
+
         {/* Expense */}
         <div className="bg-white shadow rounded-lg p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-500">Total Expenses</p>
               <p className="text-2xl font-bold">
-                ৳{totalExpense.toLocaleString()}
+                ৳{totals.expense.toLocaleString()}
               </p>
             </div>
             <FaArrowDown className="h-8 w-8 text-red-500" />
           </div>
         </div>
+
         {/* Profit */}
         <div className="bg-white shadow rounded-lg p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-500">Net Profit</p>
               <p className="text-2xl font-bold text-green-600">
-                ৳{totalProfit.toLocaleString()}
+                ৳{totals.profit.toLocaleString()}
               </p>
             </div>
             <FaDollarSign className="h-8 w-8 text-green-600" />
           </div>
         </div>
-        {/* Sales count (example: can be from backend) */}
+
+        {/* Sales Count */}
         <div className="bg-white shadow rounded-lg p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-500">Total Sales</p>
-              <p className="text-2xl font-bold">{reportData.length * 5}</p>
+              <p className="text-2xl font-bold">{totals.sales}</p>
             </div>
             <div className="h-8 w-8 bg-blue-100 rounded-full flex items-center justify-center">
               <span className="text-blue-600 font-bold">
@@ -137,7 +164,7 @@ const Reports = ({ isMobile, onPageChange }) => {
         </div>
       </div>
 
-      {/* Revenue & Expense Chart */}
+      {/* Chart */}
       <div className="bg-white shadow rounded-lg p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold">Revenue & Expense Analysis</h2>
@@ -152,37 +179,46 @@ const Reports = ({ isMobile, onPageChange }) => {
             </div>
           </div>
         </div>
-        <div className="h-80">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={reportData}>
-              <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-              <XAxis dataKey="month" tick={{ fontSize: 12 }} axisLine={false} />
-              <YAxis
-                tick={{ fontSize: 12 }}
-                axisLine={false}
-                tickFormatter={(value) => `${value / 1000}K`}
-              />
-              <Tooltip
-                formatter={(value, name) => [
-                  `৳${value.toLocaleString()}`,
-                  name === "revenue" ? "Revenue" : "Expense",
-                ]}
-              />
-              <Line
-                type="monotone"
-                dataKey="revenue"
-                stroke="#3b82f6"
-                strokeWidth={3}
-              />
-              <Line
-                type="monotone"
-                dataKey="expense"
-                stroke="#ef4444"
-                strokeWidth={3}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
+
+        {loading ? (
+          <div className="text-center text-gray-500 py-12">Loading report...</div>
+        ) : reportData.length > 0 ? (
+          <div className="h-80">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={reportData}>
+                <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                <XAxis dataKey="month" tick={{ fontSize: 12 }} axisLine={false} />
+                <YAxis
+                  tick={{ fontSize: 12 }}
+                  axisLine={false}
+                  tickFormatter={(value) => `${value / 1000}K`}
+                />
+                <Tooltip
+                  formatter={(value, name) => [
+                    `৳${value.toLocaleString()}`,
+                    name === "revenue" ? "Revenue" : "Expense",
+                  ]}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="revenue"
+                  stroke="#3b82f6"
+                  strokeWidth={3}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="expense"
+                  stroke="#ef4444"
+                  strokeWidth={3}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        ) : (
+          <div className="text-center text-gray-500 py-12">
+            No data available for this timeframe.
+          </div>
+        )}
       </div>
     </div>
   );
@@ -190,7 +226,6 @@ const Reports = ({ isMobile, onPageChange }) => {
   if (isMobile) {
     return (
       <div className="p-4 space-y-4">
-        {/* Header */}
         <div>
           <h1 className="text-2xl font-bold mb-2">Reports & Charts</h1>
           <p className="text-gray-600">
@@ -205,17 +240,16 @@ const Reports = ({ isMobile, onPageChange }) => {
 
   return (
     <div className="min-h-screen bg-white p-6 lg:w-256">
-      <div className=" relative mx-auto space-y-6">
+      <div className="relative mx-auto space-y-6">
         {/* Header */}
-        <div className=" flex flex-col  justify-between  gap-4">
+        <div className="flex flex-col justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold mb-2">Reports & Charts</h1>
             <p className="text-gray-600">
-              Analyze your business performance with detailed reports and
-              charts.
+              Analyze your business performance with detailed reports and charts.
             </p>
           </div>
-          <div className=" lg:absolute right-0 top-0 flex flex-col items-end">
+          <div className="lg:absolute right-0 top-0 flex flex-col items-end">
             <select
               value={selectedTimeframe}
               onChange={(e) => setSelectedTimeframe(e.target.value)}

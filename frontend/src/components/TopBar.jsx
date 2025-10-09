@@ -8,6 +8,9 @@ const TopBar = () => {
   const goToProfile = () => {
     navigate("/profile");
   };
+  const goToEmployee = () => {
+    navigate("/employees");
+  };
 
   return (
     <header className="bg-gray-50 border-b rounded-b-sm border-gray-200 p-4 md:px-6 py-3 md:py-3 sticky top-0 z-20 mt-0">
@@ -44,7 +47,8 @@ const TopBar = () => {
             )}
 
             {/* Notification */}
-            <button className="relative p-2 rounded-full hover:bg-white">
+            
+            <button className="relative p-2 rounded-full hover:bg-white" onClick={goToEmployee}>
               <FaBell className="text-yellow-400 text-lg" />
               <span className="absolute top-1 right-1 h-2 w-2 bg-orange-500 rounded-full"></span>
             </button>

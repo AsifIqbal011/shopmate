@@ -462,7 +462,7 @@ class ReportSummary(APIView):
         total_revenue = sales.aggregate(total=Sum("total_amount"))["total"] or 0
         total_profit = sales.aggregate(total=Sum("profit_amount"))["total"] or 0
         total_expense = expenses.aggregate(total=Sum("amount"))["total"] or 0
-
+        total_sales_count = sales.count()
         chart_map = defaultdict(lambda: {"revenue": 0, "expense": 0})
         month_order = []
 
@@ -486,11 +486,12 @@ class ReportSummary(APIView):
             seen.add(m)
             d = chart_map[m]
             chart_list.append({"month": m, "revenue": d["revenue"], "expense": d["expense"]})
-
+        
         data = {
             "total_revenue": total_revenue,
             "total_expense": total_expense,
             "total_profit": total_profit,
+            "total_sales": total_sales_count,
             "chart_data": chart_list,
         }
         return Response(data, status=status.HTTP_200_OK)
