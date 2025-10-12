@@ -1,0 +1,11 @@
+{
+  "homepage": true,
+  "api_connectivity": true,
+  "registration": true,
+  "login": true,
+  "navigation": true,
+  "shop_management": true,
+  "product_management": true,
+  "add_product": true,
+  "create_sale": true
+}
