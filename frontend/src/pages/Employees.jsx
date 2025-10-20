@@ -227,9 +227,6 @@ const Employees = () => {
                   {new Date(e.joinDate).toLocaleDateString("en-GB", {  day: "2-digit", month: "short",year: "numeric", })}
                 </td>
                 <td className="p-2 flex gap-2">
-                  <button className="p-1 text-blue-600 hover:text-blue-800">
-                    <FaEdit />
-                  </button>
                   <button
                     onClick={() => removeEmployee(e.id)}
                     className="p-1 text-red-600 hover:text-red-800"

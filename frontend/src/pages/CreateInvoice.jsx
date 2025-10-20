@@ -16,7 +16,6 @@ const CreateInvoice = () => {
   });
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
-  // ---------------- Column Definitions ----------------
   const [columns, setColumns] = useState([
     { id: "product", name: "Product", type: "text", isCustom: false },
     { id: "unit", name: "Unit", type: "number", isCustom: false },
@@ -28,7 +27,6 @@ const CreateInvoice = () => {
   const [newColumnName, setNewColumnName] = useState("");
   const [isPercentage, setIsPercentage] = useState(false);
 
-  // ---------------- Fetch Sale Details ----------------
   useEffect(() => {
     const fetchSaleDetails = async () => {
       try {
@@ -42,7 +40,7 @@ const CreateInvoice = () => {
 
         const sale = res.data;
 
-        // Map customer
+
         setCustomerInfo({
           name: sale.customer_name || "Walk-in Customer",
           phone: sale.customer?.phone || "",
@@ -50,7 +48,7 @@ const CreateInvoice = () => {
           address: sale.customer?.address || "",
         });
         console.log(sale.sale_items);
-        // Map sale items
+        
         const mappedItems = (sale.sale_items || []).map((item) => ({
           id: item.id,
           product: item.product.name,
@@ -74,7 +72,7 @@ const CreateInvoice = () => {
 
   
 
-  // ---------------- Helpers ----------------
+
   const getColumnHeader = (column) => {
     let headerText = column.name;
     if (column.operation) {
@@ -133,7 +131,6 @@ const CreateInvoice = () => {
     );
   };
 
-  // ---------------- Calculations ----------------
   const calculateModifiedSellingPrice = (row) => {
     let sellingPrice = Number(row.sellingPrice) || 0;
 

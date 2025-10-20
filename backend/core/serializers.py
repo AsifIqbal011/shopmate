@@ -28,9 +28,7 @@ class CustomUserCreateSerializer(UserCreateSerializer):
 
     @transaction.atomic
     def create(self, validated_data):
-        # Create the user
         user = super().create(validated_data)
-        # Create profile
         Profile.objects.create(user=user, **self.profile_data)
         return user
 
@@ -134,7 +132,7 @@ class SaleSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Sale
-        fields = "__all__"  # still returns all fields (ids + extra names)
+        fields = "__all__"  
         read_only_fields = ["id", "shop", "employee", "created_at"]
 
     def create(self, validated_data):
@@ -147,21 +145,17 @@ class SaleSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         items_data = validated_data.pop("sale_items", None)
 
-        # update sale fields
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
             
         instance.save()
 
         if items_data is not None:
-            # clear old items & recreate
             instance.sale_items.all().delete()
             for item_data in items_data:
                 SaleItem.objects.create(sale=instance, **item_data)
 
         return instance
-
-
 
 class InvoiceSerializer(serializers.ModelSerializer):
     class Meta:

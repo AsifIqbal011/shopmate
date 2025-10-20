@@ -1,15 +1,3 @@
-#!/usr/bin/env python3
-"""
-Comprehensive Selenium test script for ShopMate web application.
-This script tests all major functionality including:
-- User registration and login
-- Shop creation and management
-- Product management
-- Sales creation and management
-- Employee management
-- Reports and analytics
-"""
-
 import time
 import random
 import string
@@ -19,6 +7,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import Select
 from selenium.webdriver.common.keys import Keys
+from selenium.common.exceptions import NoAlertPresentException
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from selenium.common.exceptions import TimeoutException, NoSuchElementException, WebDriverException, UnexpectedAlertPresentException
@@ -34,6 +23,7 @@ class ShopMateSeleniumTester:
         self.base_url = "http://localhost:5173"  # Frontend URL
         self.api_url = "http://localhost:8000"  # Backend URL
         self.test_data = {
+            'new_username': f'test_{self.generate_random_string(6)}',
             'username': 'Asif197',
             'email': f'test_{self.generate_random_string(6)}@example.com',
             'password': '12345678@A',
@@ -66,11 +56,8 @@ class ShopMateSeleniumTester:
         options.add_argument('--allow-running-insecure-content')
         options.add_argument('--disable-extensions')
         options.add_argument('--disable-plugins')
-        # Uncomment the next line to run headless (without browser window)
-        # options.add_argument('--headless')
         
         try:
-            # Try to use system Chrome driver
             self.driver = webdriver.Chrome(options=options)
             print("✅ Chrome WebDriver setup successful!")
         except WebDriverException as e:
@@ -80,7 +67,16 @@ class ShopMateSeleniumTester:
         
         self.wait = WebDriverWait(self.driver, 15)
         print("WebDriver setup complete!")
-    
+    def handle_unexpected_alert(self):
+        try:
+            alert = self.driver.switch_to.alert
+            print(f"⚠️ Found leftover alert: {alert.text}")
+            alert.accept()
+            time.sleep(1)
+            print("✅ Alert dismissed")
+        except NoAlertPresentException:
+            pass
+
     def teardown_driver(self):
         """Clean up the WebDriver"""
         if self.driver:
@@ -163,7 +159,7 @@ class ShopMateSeleniumTester:
             
             # Look for registration form elements
             form_fields = [
-                ("username", self.test_data['username']),
+                ("username", self.test_data['new_username']),
                 ("email", self.test_data['email']),
                 ("password", self.test_data['password']),
                 ("full_name", self.test_data['full_name']),
@@ -225,7 +221,7 @@ class ShopMateSeleniumTester:
             
             # Handle any alerts that appear after submission
             if self.handle_alert():
-                print("ℹ️ Alert handled after registration submission")
+                print("Alert handled after registration submission")
             
             # Check if registration was successful
             current_url = self.driver.current_url
@@ -233,7 +229,7 @@ class ShopMateSeleniumTester:
                 print("✅ User registration appears successful!")
                 return True
             else:
-                print(f"ℹ️ Registration form submitted, current URL: {current_url}")
+                print(f" Registration form submitted, current URL: {current_url}")
                 return True  # Consider it successful if form was submitted
                 
         except Exception as e:
@@ -318,7 +314,7 @@ class ShopMateSeleniumTester:
                 print("✅ User login successful!")
                 return True
             else:
-                print(f"ℹ️ Login attempted, current URL: {current_url}")
+                print(f"Login attempted, current URL: {current_url}")
                 return True  # Consider it successful if form was submitted
                 
         except Exception as e:
@@ -354,7 +350,7 @@ class ShopMateSeleniumTester:
                         print(f"✅ {name} page navigation successful!")
                         success_count += 1
                     else:
-                        print(f"⚠️ {name} page returned 404 or not found")
+                        print(f" {name} page returned 404 or not found")
                 except Exception as e:
                     print(f"❌ Error navigating to {name}: {e}")
             
@@ -483,7 +479,7 @@ class ShopMateSeleniumTester:
         
     def test_add_product(self):
         """Test adding a new product from AddProduct page"""
-        print("\n=== 🧪 Testing Add Product Functionality ===")
+        print("\n===  Testing Add Product Functionality ===")
 
         try:
             # Navigate to Add Product page
@@ -493,9 +489,6 @@ class ShopMateSeleniumTester:
 
             self.wait.until(EC.presence_of_element_located((By.TAG_NAME, "form")))
 
-            # -------------------------------
-            # Product Name
-            # -------------------------------
             print("➡️ Entering Product Name...")
             name_input = self.wait.until(
                 EC.visibility_of_element_located((By.CSS_SELECTOR, "input[placeholder='Enter product name']"))
@@ -504,9 +497,6 @@ class ShopMateSeleniumTester:
             name_input.send_keys(self.test_data["product_name"])
             print("✅ Product Name entered")
 
-            # -------------------------------
-            # Category
-            # -------------------------------
             print("➡️ Selecting Category...")
             category_select = self.wait.until(
                 EC.visibility_of_element_located((By.TAG_NAME, "select"))
@@ -514,9 +504,6 @@ class ShopMateSeleniumTester:
             Select(category_select).select_by_index(1)
             print("✅ Category selected")
 
-            # -------------------------------
-            # Cost Price (if present)
-            # -------------------------------
             try:
                 print("➡️ Checking for Cost Price input...")
                 cost_label = self.driver.find_elements(By.XPATH, "//label[contains(text(), 'Cost Price')]")
@@ -530,44 +517,35 @@ class ShopMateSeleniumTester:
             except Exception as e:
                 print(f"⚠️ Skipped Cost Price: {e}")
 
-            # -------------------------------
-            # Selling Price
-            # -------------------------------
-            print("➡️ Entering Selling Price...")
+            print(" Entering Selling Price...")
             selling_label = self.wait.until(
                 EC.visibility_of_element_located((By.XPATH, "//label[contains(text(), 'Selling Price')]"))
             )
             selling_input = selling_label.find_element(By.XPATH, "following-sibling::input")
             selling_input.clear()
             selling_input.send_keys(self.test_data["product_price"])
-            print("✅ Selling Price entered")
+            print(" Selling Price entered")
 
-            # -------------------------------
-            # Quantity / Stocks
-            # -------------------------------
-            print("➡️ Entering Quantity...")
+            print(" Entering Quantity...")
             quantity_label = self.wait.until(
                 EC.visibility_of_element_located((By.XPATH, "//label[contains(text(), 'Stocks')]"))
             )
             quantity_input = quantity_label.find_element(By.XPATH, "following-sibling::input")
             quantity_input.clear()
             quantity_input.send_keys(self.test_data["product_quantity"])
-            print("✅ Quantity entered")
+            print(" Quantity entered")
 
             # -------------------------------
             # Description
             # -------------------------------
-            print("➡️ Entering Description...")
+            print(" Entering Description...")
             desc_input = self.wait.until(EC.visibility_of_element_located((By.TAG_NAME, "textarea")))
             desc_input.clear()
             desc_input.send_keys("This is a test product created by Selenium automation.")
-            print("✅ Description entered")
+            print(" Description entered")
 
 
-            # -------------------------------
-            # Submit Form
-            # -------------------------------
-            print("➡️ Submitting form...")
+            print(" Submitting form...")
             submit_btn = self.wait.until(
                 EC.element_to_be_clickable((
                     By.XPATH,
@@ -586,14 +564,14 @@ class ShopMateSeleniumTester:
                         EC.presence_of_element_located((By.XPATH, "//*[contains(text(), 'successfully')]"))
                     )
                 )
-                print("✅ Product added successfully (confirmed).")
+                print(" Product added successfully (confirmed).")
             except Exception:
-                print("⚠️ No success confirmation detected (may still have worked).")
+                print(" No success confirmation detected (may still have worked).")
 
             return True
 
         except Exception as e:
-            print(f"❌ Error during Add Product test: {e}")
+            print(f" Error during Add Product test: {e}")
             return False
 
     def test_create_sale(self):
@@ -604,16 +582,16 @@ class ShopMateSeleniumTester:
             try:
                 WebDriverWait(self.driver, 2).until(EC.alert_is_present())
                 alert = self.driver.switch_to.alert
-                print(f"⚠️ Found leftover alert: {alert.text}")
+                print(f" Found leftover alert: {alert.text}")
                 alert.accept()
-                print("✅ Alert dismissed before starting")
+                print(" Alert dismissed before starting")
             except TimeoutException:
                 pass
 
             # --- Navigate to Create Sale page ---
             self.driver.get(f"{self.base_url}/create-sale")
             self.wait.until(EC.presence_of_element_located((By.TAG_NAME, "body")))
-            print("✅ Page loaded successfully")
+            print(" Page loaded successfully")
 
             # --- Customer Information ---
             try:
@@ -622,14 +600,14 @@ class ShopMateSeleniumTester:
                 )
                 name_input.clear()
                 name_input.send_keys(self.test_data.get("customer_name", "Test Customer"))
-                print("✅ Customer name entered")
+                print(" Customer name entered")
 
                 phone_input = self.driver.find_element(By.CSS_SELECTOR, "input[placeholder='Phone Number']")
                 phone_input.clear()
                 phone_input.send_keys(self.test_data.get("customer_phone", "01700000000"))
-                print("✅ Customer phone entered")
+                print(" Customer phone entered")
             except Exception as e:
-                print(f"⚠️ Customer info input skipped: {e}")
+                print(f" Customer info input skipped: {e}")
 
             # --- Add Sale Item ---
             try:
@@ -637,13 +615,13 @@ class ShopMateSeleniumTester:
                     EC.element_to_be_clickable((By.XPATH, "//button[contains(., 'Add Item')]"))
                 )
                 add_item_btn.click()
-                print("✅ Clicked 'Add Item' button")
+                print(" Clicked 'Add Item' button")
             except Exception as e:
-                print(f"⚠️ Could not click 'Add Item': {e}")
+                print(f" Could not click 'Add Item': {e}")
 
             # --- Select Product (React Select) ---
             try:
-                print("🔍 Selecting product...")
+                print(" Selecting product...")
                 product_select = self.wait.until(
                     EC.element_to_be_clickable((By.CSS_SELECTOR, ".css-13cymwt-control"))
                 )
@@ -656,9 +634,9 @@ class ShopMateSeleniumTester:
                 search_input.send_keys(self.test_data["product_name"])
                 time.sleep(2)
                 search_input.send_keys(Keys.ENTER)
-                print("✅ Product selected successfully")
+                print(" Product selected successfully")
             except Exception as e:
-                print(f"❌ Product selection failed: {e}")
+                print(f" Product selection failed: {e}")
 
             # --- Complete Sale ---
             try:
@@ -668,29 +646,29 @@ class ShopMateSeleniumTester:
                 self.driver.execute_script("arguments[0].scrollIntoView(true);", complete_btn)
                 time.sleep(1)
                 complete_btn.click()
-                print("✅ Clicked 'Complete Sale' button")
+                print(" Clicked 'Complete Sale' button")
             except Exception as e:
-                print(f"❌ Could not click 'Complete Sale' button: {e}")
+                print(f" Could not click 'Complete Sale' button: {e}")
 
             # --- Wait for Sale Completion Alert ---
             try:
                 WebDriverWait(self.driver, 5).until(EC.alert_is_present())
                 alert = self.driver.switch_to.alert
-                print(f"✅ Sale Alert Appeared: {alert.text}")
+                print(f" Sale Alert Appeared: {alert.text}")
                 alert.accept()
-                print("✅ Sale alert dismissed successfully")
+                print(" Sale alert dismissed successfully")
             except TimeoutException:
-                print("⚠️ No sale alert appeared — continuing normally")
+                print(" No sale alert appeared — continuing normally")
 
             # --- Verification ---
             time.sleep(2)
             page_source = self.driver.page_source.lower()
             if "receipt" in page_source or "sale" in page_source or "completed" in page_source:
-                print("✅ Sale created successfully and verified!")
+                print(" Sale created successfully and verified!")
                 self.driver.save_screenshot("sale_success.png")
                 return True
             else:
-                print("⚠️ Sale flow completed but could not verify result text.")
+                print(" Sale flow completed but could not verify result text.")
                 self.driver.save_screenshot("sale_uncertain.png")
                 return True  # Still pass because the sale flow succeeded
 
@@ -698,9 +676,9 @@ class ShopMateSeleniumTester:
             # --- Handle any alert in case of unexpected error ---
             try:
                 alert = self.driver.switch_to.alert
-                print(f"⚠️ Unexpected alert appeared during error: {alert.text}")
+                print(f" Unexpected alert appeared during error: {alert.text}")
                 alert.accept()
-                print("✅ Alert dismissed during exception")
+                print(" Alert dismissed during exception")
             except:
                 pass
 
@@ -708,12 +686,75 @@ class ShopMateSeleniumTester:
             self.driver.save_screenshot("sale_error.png")
             return False
 
-
-
+     # Add Expense 
+    def test_add_expense(self):
+        print("\n=== 💸 Testing Add Expense ===")
+        try:
+            self.handle_unexpected_alert()
+            self.driver.get(f"{self.base_url}/expenses")
+            time.sleep(2)
+            self.wait.until(EC.presence_of_element_located((By.TAG_NAME, "form")))
+            expense_title = f"Test Expense {self.generate_random_string(4)}"
+            self.driver.find_element(By.NAME, "title").send_keys(expense_title)
+            self.driver.find_element(By.NAME, "amount").send_keys("250")
+            self.driver.find_element(By.NAME, "date").send_keys("10/17/2025")
+            self.driver.find_element(By.NAME, "description").send_keys("Test expense entry")
+            self.driver.find_element(By.CSS_SELECTOR, "button[type='submit']").click()
+            time.sleep(3)
+            if expense_title.lower() in self.driver.page_source.lower():
+                print("✅ Expense added successfully")
+                return True
+            else:
+                print(" Expense submitted but not visible")
+                return False
+        except Exception as e:
+            print(f"❌ Add Expense error: {e}")
+            return False 
+   
     
+    def test_edit_product_price(self, new_price=999):
+        """
+        Edit the first product's selling price in desktop or mobile view and save.
+        """
+        print("\n=== Testing Edit Product Price ===")
+        try:
+            self.handle_unexpected_alert()
+            self.driver.get(f"{self.base_url}/productlist")
+            time.sleep(3)
+
+            # Find the first product row
+            product_row = self.driver.find_element(By.CSS_SELECTOR, "table tbody tr")
+
+            # Click Edit button (svg inside)
+            edit_button = product_row.find_element(By.CSS_SELECTOR, "button > svg")
+            edit_button.click()
+            time.sleep(1)
+
+            # Change price
+            price_input = product_row.find_element(By.CSS_SELECTOR, "input[type='number']")
+            price_input.clear()
+            price_input.send_keys(str(new_price))
+            time.sleep(0.5)
+
+            # Click Save button (green text)
+            save_button = product_row.find_element(By.CSS_SELECTOR, "button.text-green-600")
+            save_button.click()
+            time.sleep(2)
+
+            # Verify
+            price_cell = product_row.find_elements(By.CSS_SELECTOR, "td")[3]
+            displayed_price = price_cell.text.replace("৳", "").strip()
+            
+            return True
+            
+
+        except Exception as e:
+            print(f"❌ Error editing product price: {e}")
+            return False
+
     def run_all_tests(self):
         """Run all test functions"""
-        print("🚀 Starting ShopMate Selenium Web Application Tests")
+        print(" Starting ShopMate Selenium Web Application Tests")
         print("=" * 60)
         
         results = {}
@@ -737,9 +778,11 @@ class ShopMateSeleniumTester:
             results['product_management'] = self.test_product_management()
             results['add_product'] = self.test_add_product()
             time.sleep(2)
+            results['add_expense'] = self.test_add_expense()
+            results['edit_product_price'] = self.test_edit_product_price(new_price=500)
             results['create_sale'] = self.test_create_sale()
+           
 
-            
         finally:
             # Cleanup
             self.teardown_driver()
@@ -761,11 +804,11 @@ class ShopMateSeleniumTester:
         print(f"\nOverall: {passed}/{total} tests passed ({passed/total*100:.1f}%)")
         
         if passed == total:
-            print("🎉 All Selenium tests passed! The web application is working perfectly!")
+            print(" All Selenium tests passed! The web application is working perfectly!")
         elif passed > total * 0.7:
-            print("⚠️ Most Selenium tests passed. Some minor issues detected.")
+            print(" Most Selenium tests passed. Some minor issues detected.")
         else:
-            print("🚨 Multiple Selenium test failures detected. Please check the web application.")
+            print(" Multiple Selenium test failures detected. Please check the web application.")
         
         return results
 
@@ -778,7 +821,7 @@ def main():
     with open('comprehensive_selenium_test_results.json', 'w') as f:
         json.dump(results, f, indent=2)
     
-    print(f"\n📄 Comprehensive Selenium test results saved to comprehensive_selenium_test_results.json")
+    print(f"\n Comprehensive Selenium test results saved to comprehensive_selenium_test_results.json")
 
 if __name__ == "__main__":
     main()

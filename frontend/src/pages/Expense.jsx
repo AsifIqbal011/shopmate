@@ -43,12 +43,10 @@ export default function Expense() {
     fetchExpenses();
   }, []);
 
-  // ✅ Handle form input
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // ✅ Add expense
   const handleAddExpense = async (e) => {
     e.preventDefault();
 
@@ -79,7 +77,6 @@ export default function Expense() {
     }
   };
 
-  // ✅ Delete expense
   const handleDelete = async (id) => {
     const token = localStorage.getItem("token");
     if (!token) return;
@@ -94,7 +91,6 @@ export default function Expense() {
     }
   };
 
-  // ✅ Start editing
   const handleEdit = (exp) => {
     setEditId(exp.id);
     setEditData({ ...exp });
@@ -104,7 +100,6 @@ export default function Expense() {
     setEditData({ ...editData, [e.target.name]: e.target.value });
   };
 
-  // ✅ Save edit
   const handleSaveEdit = async (id) => {
     const token = localStorage.getItem("token");
     if (!token) return;

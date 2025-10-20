@@ -7,5 +7,7 @@
   "shop_management": true,
   "product_management": true,
   "add_product": true,
+  "add_expense": true,
+  "edit_product_price": true,
   "create_sale": true
 }

@@ -47,7 +47,6 @@ class ShopViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        # Only show shops owned by the logged-in user
         return Shop.objects.filter(owner=self.request.user)
 
     def perform_create(self, serializer):
