@@ -61,10 +61,8 @@ The goal of this project is to build a SaaS-style retail management system using
 - Git & GitHub
 - Virtual Environment
 - REST API integration
-
-## Project Structure
 ````
-
+## Project Structure
 ```bash
 ShopMate/
 │
