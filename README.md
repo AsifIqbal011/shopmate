@@ -18,7 +18,7 @@ The goal of this project is to build a SaaS-style retail management system using
 
 ### Data Flow Diagram (DFD)
 
-![Data Flow Diagram](use case .png)
+![Data Flow Diagram](use_case_.png)
 ## Features
 
 ### User Roles
