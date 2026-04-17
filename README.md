@@ -14,11 +14,11 @@ Managing a shop manually can lead to errors, missing records, and incorrect prof
 The goal of this project is to build a SaaS-style retail management system using modern web technologies.
 ### Use Case Diagram
 
-![Use Case Diagram](dfd.png)
+![Use Case Diagram](usecase.png)
 
 ### Data Flow Diagram (DFD)
 
-![Data Flow Diagram](usecase.png)
+![Data Flow Diagram](dfd.png)
 ## Features
 
 ### User Roles
