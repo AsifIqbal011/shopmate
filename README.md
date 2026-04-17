@@ -14,7 +14,7 @@ Managing a shop manually can lead to errors, missing records, and incorrect prof
 The goal of this project is to build a SaaS-style retail management system using modern web technologies.
 ### Overview & Testing Video
 
-![Watch the demo](https://www.youtube.com/watch?v=8Ue5ATs8B-8)
+[![Watch the demo](https://img.youtube.com/vi/8Ue5ATs8B-8/0.jpg)](https://www.youtube.com/watch?v=8Ue5ATs8B-8)
 
 ### Use Case Diagram
 
