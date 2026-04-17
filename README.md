@@ -16,64 +16,56 @@ The goal of this project is to build a SaaS-style retail management system using
 
 ````
 ## Features
-````
+
 ### User Roles
 - Admin
 - Shop Owner
 - Employee
-````
+
 
 ### Product Management
 - Add, edit, delete products
 - Upload product images
 - Track stock levels
-````
-````
+
 ### Sales Management
 - Record daily sales
 - Track order history
 - Monitor total revenue
-````
-````
+
 ### Profit Calculation
 - Automatic profit calculation
 - Cost vs selling price tracking
 - Revenue insights
-````
-````
+
 ### Search & Filter
 - Search products easily
 - Filter by category or price
-````
-````
+
 ### Dashboard
 - Overview of business performance
 - Key metrics (sales, profit, inventory)
-````
-````
+
 ## Tech Stack
-````
-````
+
+
 ### Frontend
 - React (with modern features)
 - Tailwind CSS
-````
-````
+
 ### Backend
 - Django
 - Django REST Framework
-````
-````
+
 ### Database
 - PostgreSQL
-````
-````
+
+
 ### Tools
 - Git & GitHub
 - Virtual Environment
 - REST API integration
-````
-````
+
 ## Project Structure
 ```bash
 ShopMate/
