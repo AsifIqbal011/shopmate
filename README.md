@@ -63,9 +63,9 @@ The goal of this project is to build a SaaS-style retail management system using
 - REST API integration
 
 ## Project Structure
+````
 
-
-
+```bash
 ShopMate/
 │
 ├── backend/
@@ -84,7 +84,7 @@ ShopMate/
 ├── database/
 ├── requirements.txt
 └── README.md
-
+````
 
 
 ## Installation
