@@ -1,4 +1,3 @@
-```markdown
 # ShopMate
 
 ShopMate is a full-stack web application designed to help shop owners manage products, track sales, and calculate profit efficiently. It provides a clean dashboard for business insights and simplifies day-to-day shop management.
@@ -14,7 +13,6 @@ Managing a shop manually can lead to errors, missing records, and incorrect prof
 
 The goal of this project is to build a SaaS-style retail management system using modern web technologies.
 
-````
 ## Features
 
 ### User Roles
@@ -171,13 +169,9 @@ ShopMate is ideal for:
 
 It replaces manual record-keeping with a smart digital system, improving accuracy and efficiency.
 
-## License
-
-This project is open-source and available under the MIT License.
 
 ## Author
 
 Asif Iqbal
 GitHub: [https://github.com/AsifIqbal011](https://github.com/AsifIqbal011)
 
-```
