@@ -64,7 +64,7 @@ The goal of this project is to build a SaaS-style retail management system using
 
 ## Project Structure
 
-```
+
 
 ShopMate/
 │
@@ -85,7 +85,7 @@ ShopMate/
 ├── requirements.txt
 └── README.md
 
-````
+
 
 ## Installation
 
